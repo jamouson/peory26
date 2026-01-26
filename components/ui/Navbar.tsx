@@ -1,12 +1,12 @@
 "use client"
 
-import { siteConfig } from "@/app/siteConfig"
+import { siteConfig } from "@/app/landing/siteConfig"
 import useScroll from "@/lib/use-scroll"
 import { cx } from "@/lib/utils"
 import { RiCloseLine, RiMenuLine } from "@remixicon/react"
 import Link from "next/link"
 import React from "react"
-import { DatabaseLogo } from "../../../public/DatabaseLogo"
+import { DatabaseLogo } from "@/components/icons/DatabaseLogo"
 import { Button } from "../Button"
 
 export function Navigation() {
