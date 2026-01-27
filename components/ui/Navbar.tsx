@@ -1,6 +1,6 @@
 "use client"
 
-import { siteConfig } from "@/app/landing/siteConfig"
+import { siteConfig } from "@/app/siteConfig"
 import useScroll from "@/lib/use-scroll"
 import { cx } from "@/lib/utils"
 import { RiCloseLine, RiMenuLine } from "@remixicon/react"
@@ -8,6 +8,7 @@ import Link from "next/link"
 import React from "react"
 import { DatabaseLogo } from "@/components/icons/DatabaseLogo"
 import { Button } from "../Button"
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
 
 export function Navigation() {
   const scrolled = useScroll(15)
@@ -65,11 +66,30 @@ export function Navigation() {
               </Link>
             </div>
           </nav>
-          <Button className="hidden h-10 font-semibold md:flex">
-            Book a demo
-          </Button>
+          <div className="hidden items-center gap-3 md:flex">
+            <SignedOut>
+              <Link href="/sign-in">
+                <Button className="h-10 font-semibold">Sign in</Button>
+              </Link>
+            </SignedOut>
+            <SignedIn>
+              <Link href="/dashboard">
+                <Button variant="light" className="h-10 font-semibold">
+                  Dashboard
+                </Button>
+              </Link>
+              <UserButton />
+            </SignedIn>
+          </div>
           <div className="flex gap-x-2 md:hidden">
-            <Button>Book demo</Button>
+            <SignedOut>
+              <Link href="/sign-in">
+                <Button>Sign in</Button>
+              </Link>
+            </SignedOut>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
             <Button
               onClick={() => setOpen(!open)}
               variant="light"
