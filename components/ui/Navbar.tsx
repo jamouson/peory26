@@ -9,6 +9,7 @@ import React from "react"
 import { DatabaseLogo } from "@/components/icons/DatabaseLogo"
 import { Button } from "../Button"
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
+import { ModeToggle } from "@/components/mode-toggle"
 
 export function Navigation() {
   const scrolled = useScroll(15)
@@ -67,6 +68,8 @@ export function Navigation() {
             </div>
           </nav>
           <div className="hidden items-center gap-3 md:flex">
+            {/* Official shadcn/ui ModeToggle */}
+            <ModeToggle />
             <SignedOut>
               <Link href="/sign-in">
                 <Button className="h-10 font-semibold">Sign in</Button>
@@ -82,6 +85,8 @@ export function Navigation() {
             </SignedIn>
           </div>
           <div className="flex gap-x-2 md:hidden">
+            {/* ModeToggle for mobile */}
+            <ModeToggle />
             <SignedOut>
               <Link href="/sign-in">
                 <Button>Sign in</Button>

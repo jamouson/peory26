@@ -128,6 +128,12 @@
   * {
     @apply border-border outline-ring/50;
   }
+  
+  /* FIX: Prevents page shift when scrollbar disappears on dropdown open */
+  html {
+    scrollbar-gutter: stable;
+  }
+  
   body {
     @apply bg-background text-foreground;
   }
