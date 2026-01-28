@@ -9,28 +9,42 @@ import { RiLoader2Fill, RiGoogleFill, RiInstagramFill } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { PhoneInput } from "@/components/PhoneInput"
 import { TestimonialCarousel } from "@/components/TestimonialCarousel"
 import { AuthLayout } from "@/components/AuthLayout"
 
-import type { AuthMethod } from "@/lib/auth-types"
 import {
-  getClerkErrorMessage,
-  GENERIC_AUTH_ERROR,
   getOAuthConfig,
   type OAuthStrategy,
 } from "@/lib/auth-utils"
 
 /**
- * Validate phone number has required digits
+ * Detect if input is email or phone
  */
-function isPhoneComplete(phone: string): boolean {
-  // Extract digits only
+function detectInputType(input: string): "email" | "phone" {
+  // Simple email detection (contains @)
+  if (input.includes("@")) {
+    return "email"
+  }
+  // Otherwise treat as phone
+  return "phone"
+}
+
+/**
+ * Format phone number for Clerk (add +1 prefix if needed)
+ */
+function formatPhoneForClerk(phone: string): string {
+  // Remove all non-digits
   const digits = phone.replace(/\D/g, "")
   
-  // US/Canada needs 11 digits (+1 + 10 digits)
-  // Most others need 12-13 digits
-  return digits.length >= 11
+  // Add +1 if not present
+  if (digits.length === 10) {
+    return `+1${digits}`
+  }
+  if (digits.length === 11 && digits.startsWith("1")) {
+    return `+${digits}`
+  }
+  
+  return `+${digits}`
 }
 
 export default function SignInPage() {
@@ -38,83 +52,80 @@ export default function SignInPage() {
   const router = useRouter()
 
   // Form state
-  const [authMethod, setAuthMethod] = useState<AuthMethod>("email")
-  const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
-  const [password, setPassword] = useState("")
+  const [identifier, setIdentifier] = useState("")
   const [verifying, setVerifying] = useState(false)
   const [code, setCode] = useState("")
+  const [inputType, setInputType] = useState<"email" | "phone">("email")
 
   // UI state
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
-  // Email sign-in handler
-  const handleEmailSignIn = useCallback(
+  // Sign-in handler
+  const handleSignIn = useCallback(
     async (e: FormEvent) => {
       e.preventDefault()
-      if (!isLoaded) return
+      if (!isLoaded || !identifier) return
 
       setIsLoading(true)
       setError("")
 
+      const detectedType = detectInputType(identifier)
+      setInputType(detectedType)
+
       try {
+        const formattedIdentifier = detectedType === "phone" 
+          ? formatPhoneForClerk(identifier)
+          : identifier
+
         const result = await signIn.create({
-          identifier: email,
-          password,
+          identifier: formattedIdentifier,
         })
 
-        if (result.status === "complete") {
-          await setActive({ session: result.createdSessionId })
-          router.push("/dashboard")
+        // Check if we have any supported first factors
+        if (!result.supportedFirstFactors || result.supportedFirstFactors.length === 0) {
+          setError("Enter a valid email or phone number")
+          setIsLoading(false)
+          return
         }
-      } catch (err) {
-        setError(GENERIC_AUTH_ERROR)
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    [isLoaded, signIn, setActive, email, password, router]
-  )
 
-  // Phone sign-in handler
-  const handlePhoneSignIn = useCallback(
-    async (e: FormEvent) => {
-      e.preventDefault()
-      if (!isLoaded) return
-
-      setIsLoading(true)
-      setError("")
-
-      try {
-        const result = await signIn.create({
-          identifier: phone,
-        })
-
-        const phoneCodeFactor = result.supportedFirstFactors?.find(
-          (factor) => factor.strategy === "phone_code"
+        const codeFactor = result.supportedFirstFactors?.find(
+          (factor) => factor.strategy === (detectedType === "email" ? "email_code" : "phone_code")
         )
 
-        if (phoneCodeFactor && "phoneNumberId" in phoneCodeFactor) {
+        if (!codeFactor) {
+          setError("Enter a valid email or phone number")
+          setIsLoading(false)
+          return
+        }
+
+        if (detectedType === "email" && "emailAddressId" in codeFactor) {
+          await result.prepareFirstFactor({
+            strategy: "email_code",
+            emailAddressId: codeFactor.emailAddressId,
+          })
+          setVerifying(true)
+        } else if (detectedType === "phone" && "phoneNumberId" in codeFactor) {
           await result.prepareFirstFactor({
             strategy: "phone_code",
-            phoneNumberId: phoneCodeFactor.phoneNumberId,
+            phoneNumberId: codeFactor.phoneNumberId,
           })
           setVerifying(true)
         } else {
-          setError("Phone authentication not available")
+          setError("Enter a valid email or phone number")
         }
-      } catch (err) {
-        setError(getClerkErrorMessage(err, "Invalid phone number"))
+      } catch (err: unknown) {
+        // Clerk returns error code "form_identifier_not_found" when account doesn't exist
+        setError("Enter a valid email or phone number")
       } finally {
         setIsLoading(false)
       }
     },
-    [isLoaded, signIn, phone]
+    [isLoaded, signIn, identifier]
   )
 
-  // Phone verification handler
-  const handlePhoneVerify = useCallback(
+  // Verification handler
+  const handleVerify = useCallback(
     async (e: FormEvent) => {
       e.preventDefault()
       if (!isLoaded) return
@@ -124,7 +135,7 @@ export default function SignInPage() {
 
       try {
         const result = await signIn.attemptFirstFactor({
-          strategy: "phone_code",
+          strategy: inputType === "email" ? "email_code" : "phone_code",
           code,
         })
 
@@ -133,12 +144,12 @@ export default function SignInPage() {
           router.push("/dashboard")
         }
       } catch (err) {
-        setError(getClerkErrorMessage(err, "Invalid verification code"))
+        setError("Invalid verification code. Please try again.")
       } finally {
         setIsLoading(false)
       }
     },
-    [isLoaded, signIn, setActive, code, router]
+    [isLoaded, signIn, setActive, inputType, code, router]
   )
 
   // OAuth handler
@@ -149,17 +160,11 @@ export default function SignInPage() {
       try {
         await signIn.authenticateWithRedirect(getOAuthConfig(strategy))
       } catch (err) {
-        setError(getClerkErrorMessage(err, `Failed to sign in with ${strategy}`))
+        setError(`Failed to sign in with ${strategy === "oauth_google" ? "Google" : "Instagram"}`)
       }
     },
     [isLoaded, signIn]
   )
-
-  // Auth method switcher
-  const handleMethodSwitch = useCallback(() => {
-    setAuthMethod((prev) => (prev === "email" ? "phone" : "email"))
-    setError("")
-  }, [])
 
   // Back from verification
   const handleBackFromVerify = useCallback(() => {
@@ -168,15 +173,9 @@ export default function SignInPage() {
     setError("")
   }, [])
 
-  // Check if form is valid for submission
-  const isFormValid =
-    authMethod === "email"
-      ? email.length > 0 && password.length > 0
-      : isPhoneComplete(phone)
-
   return (
     <AuthLayout
-      topRightButton={{ href: "/sign-up", label: "Sign up" }}
+      topRightButton={{ href: "/waitlist", label: "Sign up" }}
       sidebarContent={<TestimonialCarousel />}
     >
       {!verifying ? (
@@ -187,79 +186,30 @@ export default function SignInPage() {
               Sign in to your account
             </h1>
             <p className="text-sm text-muted-foreground">
-              Enter your email below to sign in to your account
+              Enter your email or phone to receive a verification code
             </p>
           </div>
 
           {/* Form */}
           <div className="grid gap-6">
-            <form
-              onSubmit={
-                authMethod === "email" ? handleEmailSignIn : handlePhoneSignIn
-              }
-            >
+            <form onSubmit={handleSignIn}>
               <div className="grid gap-4">
-                {/* Email/Phone Input */}
+                {/* Email or Phone Input */}
                 <div className="grid gap-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="identifier">
-                      {authMethod === "email" ? "Email" : "Phone"}
-                    </Label>
-                    <button
-                      type="button"
-                      onClick={handleMethodSwitch}
-                      className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      {authMethod === "email" ? "Use phone" : "Use email"}
-                    </button>
-                  </div>
-                  {authMethod === "email" ? (
-                    <Input
-                      id="identifier"
-                      placeholder="name@example.com"
-                      type="email"
-                      autoCapitalize="none"
-                      autoComplete="email"
-                      autoCorrect="off"
-                      disabled={isLoading}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  ) : (
-                    <PhoneInput
-                      value={phone}
-                      onChange={setPhone}
-                      disabled={isLoading}
-                      required
-                    />
-                  )}
+                  <Label htmlFor="identifier">Email or Phone</Label>
+                  <Input
+                    id="identifier"
+                    placeholder="name@example.com or (555) 123-4567"
+                    type="text"
+                    autoCapitalize="none"
+                    autoComplete="username"
+                    autoCorrect="off"
+                    disabled={isLoading}
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    required
+                  />
                 </div>
-
-                {/* Password (Email only) */}
-                {authMethod === "email" && (
-                  <div className="grid gap-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="password">Password</Label>
-                      <Link
-                        href={`/forgot-password${
-                          email ? `?email=${encodeURIComponent(email)}` : ""
-                        }`}
-                        className="text-sm text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
-                      >
-                        Forgot password?
-                      </Link>
-                    </div>
-                    <Input
-                      id="password"
-                      type="password"
-                      disabled={isLoading}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                )}
 
                 {/* Error Message */}
                 {error && (
@@ -269,13 +219,11 @@ export default function SignInPage() {
                 )}
 
                 {/* Submit Button */}
-                <Button type="submit" disabled={isLoading || !isFormValid}>
+                <Button type="submit" disabled={isLoading || !identifier}>
                   {isLoading && (
                     <RiLoader2Fill className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  {authMethod === "email"
-                    ? "Sign In with Email"
-                    : "Continue with Phone"}
+                  Continue
                 </Button>
               </div>
             </form>
@@ -339,16 +287,18 @@ export default function SignInPage() {
           {/* Verification Header */}
           <div className="flex flex-col space-y-2 text-center">
             <h1 className="text-2xl font-semibold tracking-tight">
-              Verify your phone
+              Verify your {inputType}
             </h1>
             <p className="text-sm text-muted-foreground">
               We sent a verification code to{" "}
-              <strong className="font-medium text-foreground">{phone}</strong>
+              <strong className="font-medium text-foreground">
+                {identifier}
+              </strong>
             </p>
           </div>
 
           {/* Verification Form */}
-          <form onSubmit={handlePhoneVerify}>
+          <form onSubmit={handleVerify}>
             <div className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="code">Verification Code</Label>

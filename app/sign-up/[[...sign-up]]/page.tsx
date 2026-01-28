@@ -9,27 +9,42 @@ import { RiLoader2Fill, RiGoogleFill, RiInstagramFill } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { PhoneInput } from "@/components/PhoneInput"
 import { TestimonialCarousel } from "@/components/TestimonialCarousel"
 import { AuthLayout } from "@/components/AuthLayout"
 
-import type { AuthMethod } from "@/lib/auth-types"
 import {
-  getClerkErrorMessage,
   getOAuthConfig,
   type OAuthStrategy,
 } from "@/lib/auth-utils"
 
 /**
- * Validate phone number has required digits
+ * Detect if input is email or phone
  */
-function isPhoneComplete(phone: string): boolean {
-  // Extract digits only
+function detectInputType(input: string): "email" | "phone" {
+  // Simple email detection (contains @)
+  if (input.includes("@")) {
+    return "email"
+  }
+  // Otherwise treat as phone
+  return "phone"
+}
+
+/**
+ * Format phone number for Clerk (add +1 prefix if needed)
+ */
+function formatPhoneForClerk(phone: string): string {
+  // Remove all non-digits
   const digits = phone.replace(/\D/g, "")
   
-  // US/Canada needs 11 digits (+1 + 10 digits)
-  // Most others need 12-13 digits
-  return digits.length >= 11
+  // Add +1 if not present
+  if (digits.length === 10) {
+    return `+1${digits}`
+  }
+  if (digits.length === 11 && digits.startsWith("1")) {
+    return `+${digits}`
+  }
+  
+  return `+${digits}`
 }
 
 export default function SignUpPage() {
@@ -37,12 +52,10 @@ export default function SignUpPage() {
   const router = useRouter()
 
   // Form state
-  const [authMethod, setAuthMethod] = useState<AuthMethod>("email")
-  const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
-  const [password, setPassword] = useState("")
+  const [identifier, setIdentifier] = useState("")
   const [verifying, setVerifying] = useState(false)
   const [code, setCode] = useState("")
+  const [inputType, setInputType] = useState<"email" | "phone">("email")
 
   // UI state
   const [isLoading, setIsLoading] = useState(false)
@@ -52,46 +65,53 @@ export default function SignUpPage() {
   const handleSignUp = useCallback(
     async (e: FormEvent) => {
       e.preventDefault()
-      if (!isLoaded) return
+      if (!isLoaded || !identifier) return
 
       setIsLoading(true)
       setError("")
 
+      const detectedType = detectInputType(identifier)
+      setInputType(detectedType)
+
       try {
-        if (authMethod === "email") {
+        const formattedIdentifier = detectedType === "phone" 
+          ? formatPhoneForClerk(identifier)
+          : identifier
+
+        if (detectedType === "email") {
           await signUp.create({
-            emailAddress: email,
-            password,
+            emailAddress: formattedIdentifier,
           })
           await signUp.prepareEmailAddressVerification({
             strategy: "email_code",
           })
         } else {
           await signUp.create({
-            phoneNumber: phone,
+            phoneNumber: formattedIdentifier,
           })
           await signUp.preparePhoneNumberVerification()
         }
 
         setVerifying(true)
-      } catch (err) {
-        const errorMessage = getClerkErrorMessage(err)
+      } catch (err: unknown) {
+        // Check for specific Clerk error codes
+        const clerkError = (err as { errors?: Array<{ code?: string }>, status?: number })?.errors?.[0]
         
-        // Generic message for sensitive errors
+        // Handle specific error cases
         if (
-          errorMessage.toLowerCase().includes("password") ||
-          errorMessage.toLowerCase().includes("email") ||
-          errorMessage.toLowerCase().includes("identifier")
+          clerkError?.code === "form_param_format_invalid" ||
+          clerkError?.code === "form_identifier_exists" ||
+          (err as { status?: number })?.status === 422
         ) {
-          setError("Unable to create account. Please check your information.")
+          setError("Enter a valid email or phone number")
         } else {
-          setError(errorMessage)
+          setError("Enter a valid email or phone number")
         }
       } finally {
         setIsLoading(false)
       }
     },
-    [isLoaded, signUp, authMethod, email, password, phone]
+    [isLoaded, signUp, identifier]
   )
 
   // Verification handler
@@ -105,7 +125,7 @@ export default function SignUpPage() {
 
       try {
         const result =
-          authMethod === "email"
+          inputType === "email"
             ? await signUp.attemptEmailAddressVerification({ code })
             : await signUp.attemptPhoneNumberVerification({ code })
 
@@ -114,12 +134,12 @@ export default function SignUpPage() {
           router.push("/dashboard")
         }
       } catch (err) {
-        setError(getClerkErrorMessage(err, "Invalid verification code"))
+        setError("Invalid verification code. Please try again.")
       } finally {
         setIsLoading(false)
       }
     },
-    [isLoaded, signUp, setActive, authMethod, code, router]
+    [isLoaded, signUp, setActive, inputType, code, router]
   )
 
   // OAuth handler
@@ -130,17 +150,11 @@ export default function SignUpPage() {
       try {
         await signUp.authenticateWithRedirect(getOAuthConfig(strategy))
       } catch (err) {
-        setError(getClerkErrorMessage(err, `Failed to sign up with ${strategy}`))
+        setError(`Failed to sign up with ${strategy === "oauth_google" ? "Google" : "Instagram"}`)
       }
     },
     [isLoaded, signUp]
   )
-
-  // Auth method switcher
-  const handleMethodSwitch = useCallback(() => {
-    setAuthMethod((prev) => (prev === "email" ? "phone" : "email"))
-    setError("")
-  }, [])
 
   // Back from verification
   const handleBackFromVerify = useCallback(() => {
@@ -148,12 +162,6 @@ export default function SignUpPage() {
     setCode("")
     setError("")
   }, [])
-
-  // Check if form is valid for submission
-  const isFormValid =
-    authMethod === "email"
-      ? email.length > 0 && password.length > 0
-      : isPhoneComplete(phone)
 
   return (
     <AuthLayout
@@ -168,68 +176,33 @@ export default function SignUpPage() {
               Create an account
             </h1>
             <p className="text-sm text-muted-foreground">
-              Enter your email below to create your account
+              Enter your email or phone to receive a verification code
             </p>
           </div>
 
           {/* Form */}
           <div className="grid gap-6">
             <form onSubmit={handleSignUp}>
+              {/* Clerk CAPTCHA */}
+              <div id="clerk-captcha" />
+              
               <div className="grid gap-4">
-                {/* Email/Phone Input */}
+                {/* Email or Phone Input */}
                 <div className="grid gap-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="identifier">
-                      {authMethod === "email" ? "Email" : "Phone"}
-                    </Label>
-                    <button
-                      type="button"
-                      onClick={handleMethodSwitch}
-                      className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      {authMethod === "email" ? "Use phone" : "Use email"}
-                    </button>
-                  </div>
-                  {authMethod === "email" ? (
-                    <Input
-                      id="identifier"
-                      placeholder="name@example.com"
-                      type="email"
-                      autoCapitalize="none"
-                      autoComplete="email"
-                      autoCorrect="off"
-                      disabled={isLoading}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  ) : (
-                    <PhoneInput
-                      value={phone}
-                      onChange={setPhone}
-                      disabled={isLoading}
-                      required
-                    />
-                  )}
+                  <Label htmlFor="identifier">Email or Phone</Label>
+                  <Input
+                    id="identifier"
+                    placeholder="name@example.com or (555) 123-4567"
+                    type="text"
+                    autoCapitalize="none"
+                    autoComplete="username"
+                    autoCorrect="off"
+                    disabled={isLoading}
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    required
+                  />
                 </div>
-
-                {/* Password (Email only) */}
-                {authMethod === "email" && (
-                  <div className="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      disabled={isLoading}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Must be at least 8 characters
-                    </p>
-                  </div>
-                )}
 
                 {/* Error Message */}
                 {error && (
@@ -239,13 +212,11 @@ export default function SignUpPage() {
                 )}
 
                 {/* Submit Button */}
-                <Button type="submit" disabled={isLoading || !isFormValid}>
+                <Button type="submit" disabled={isLoading || !identifier}>
                   {isLoading && (
                     <RiLoader2Fill className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  {authMethod === "email"
-                    ? "Sign Up with Email"
-                    : "Continue with Phone"}
+                  Continue
                 </Button>
               </div>
             </form>
@@ -309,12 +280,12 @@ export default function SignUpPage() {
           {/* Verification Header */}
           <div className="flex flex-col space-y-2 text-center">
             <h1 className="text-2xl font-semibold tracking-tight">
-              Verify your {authMethod}
+              Verify your {inputType}
             </h1>
             <p className="text-sm text-muted-foreground">
               We sent a verification code to{" "}
               <strong className="font-medium text-foreground">
-                {authMethod === "email" ? email : phone}
+                {identifier}
               </strong>
             </p>
           </div>

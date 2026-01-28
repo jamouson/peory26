@@ -2,7 +2,7 @@
 
 import { useSignIn } from "@clerk/nextjs"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useState, useCallback, useEffect, FormEvent } from "react"
+import { useState, useCallback, useEffect, FormEvent, Suspense } from "react"
 import Link from "next/link"
 import { RiLoader2Fill, RiArrowLeftLine } from "@remixicon/react"
 
@@ -14,7 +14,7 @@ import { AuthLayout } from "@/components/AuthLayout"
 import type { ResetStep } from "@/lib/auth-types"
 import { getClerkErrorMessage } from "@/lib/auth-utils"
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordContent() {
   const { isLoaded, signIn, setActive } = useSignIn()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -299,5 +299,13 @@ export default function ForgotPasswordPage() {
         </Link>
       </p>
     </AuthLayout>
+  )
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
+      <ForgotPasswordContent />
+    </Suspense>
   )
 }
