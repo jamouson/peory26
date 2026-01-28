@@ -1,0 +1,21 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci --cache .npm --prefer-offline
+    build:
+      commands:
+        - echo "=== Checking Environment Variables ==="
+        - env | grep CLERK || echo "ERROR - No CLERK env vars found!"
+        - env | grep NEXT_PUBLIC_CLERK || echo "ERROR - No NEXT_PUBLIC_CLERK env vars found!"
+        - echo "=== Building Application ==="
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - .next/cache/**/*
+      - .npm/**/*
