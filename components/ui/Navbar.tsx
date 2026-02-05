@@ -10,6 +10,7 @@ import { DatabaseLogo } from "@/components/icons/DatabaseLogo"
 import { Button } from "../Button"
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
 import { ModeToggle } from "@/components/mode-toggle"
+import { CartIcon } from "@/components/cart"
 
 export function Navigation() {
   const scrolled = useScroll(15)
@@ -35,66 +36,66 @@ export function Navigation() {
         "fixed inset-x-3 top-4 z-50 mx-auto flex max-w-6xl transform-gpu animate-slide-down-fade justify-center overflow-hidden rounded-xl border border-transparent px-3 py-3 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1.03)] will-change-transform",
         open === true ? "h-52" : "h-16",
         scrolled || open === true
-          ? "backdrop-blur-nav max-w-3xl border-gray-100 bg-white/80 shadow-xl shadow-black/5 dark:border-white/15 dark:bg-black/70"
+          ? "border-gray-200/50 bg-white/80 shadow-md backdrop-blur-xl dark:border-white/10 dark:bg-gray-950/80"
           : "bg-white/0 dark:bg-gray-950/0",
       )}
     >
-      <div className="w-full md:my-auto">
-        <div className="relative flex items-center justify-between">
-          <Link href={siteConfig.baseLinks.home} aria-label="Home">
+      <div className="w-full">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" aria-label="Home">
             <span className="sr-only">Company logo</span>
-            <DatabaseLogo className="w-28 md:w-32" />
+            <DatabaseLogo className="w-28" />
           </Link>
-          <nav className="hidden md:absolute md:left-1/2 md:top-1/2 md:block md:-translate-x-1/2 md:-translate-y-1/2 md:transform">
-            <div className="flex items-center gap-10 font-medium">
-              <Link
-                className="px-2 py-1 text-gray-900 dark:text-gray-50"
-                href={siteConfig.baseLinks.about}
-              >
-                About
-              </Link>
-              <Link
-                className="px-2 py-1 text-gray-900 dark:text-gray-50"
-                href={siteConfig.baseLinks.pricing}
-              >
-                Pricing
-              </Link>
-              <Link
-                className="px-2 py-1 text-gray-900 dark:text-gray-50"
-                href={siteConfig.baseLinks.changelog}
-              >
-                Changelog
-              </Link>
-            </div>
+
+          {/* Desktop nav links */}
+          <nav className="hidden md:flex md:items-center md:gap-x-6">
+            <Link
+              href={siteConfig.baseLinks.about}
+              className="text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
+            >
+              About
+            </Link>
+            <Link
+              href={siteConfig.baseLinks.pricing}
+              className="text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
+            >
+              Pricing
+            </Link>
+            <Link
+              href={siteConfig.baseLinks.changelog}
+              className="text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
+            >
+              Changelog
+            </Link>
           </nav>
-          <div className="hidden items-center gap-3 md:flex">
-            {/* Official shadcn/ui ModeToggle */}
+
+          {/* Desktop right side */}
+          <div className="hidden items-center gap-x-2 md:flex">
             <ModeToggle />
-            <SignedOut>
-              <Link href="/sign-in">
-                <Button className="h-10 font-semibold">Sign in</Button>
-              </Link>
-            </SignedOut>
             <SignedIn>
-              <Link href="/dashboard">
-                <Button variant="light" className="h-10 font-semibold">
-                  Dashboard
-                </Button>
-              </Link>
+              <CartIcon />
               <UserButton />
             </SignedIn>
-          </div>
-          <div className="flex gap-x-2 md:hidden">
-            {/* ModeToggle for mobile */}
-            <ModeToggle />
             <SignedOut>
               <Link href="/sign-in">
                 <Button>Sign in</Button>
               </Link>
             </SignedOut>
+          </div>
+
+          {/* Mobile right side */}
+          <div className="flex gap-x-2 md:hidden">
+            <ModeToggle />
             <SignedIn>
+              <CartIcon />
               <UserButton />
             </SignedIn>
+            <SignedOut>
+              <Link href="/sign-in">
+                <Button>Sign in</Button>
+              </Link>
+            </SignedOut>
             <Button
               onClick={() => setOpen(!open)}
               variant="light"
@@ -108,6 +109,8 @@ export function Navigation() {
             </Button>
           </div>
         </div>
+
+        {/* Mobile nav links */}
         <nav
           className={cx(
             "my-6 flex text-lg ease-in-out will-change-transform md:hidden",
