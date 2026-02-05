@@ -1,6 +1,5 @@
 "use client"
 
-import { useSignUp } from "@clerk/nextjs"
 import { useState, useCallback, FormEvent } from "react"
 import Link from "next/link"
 import { RiLoader2Fill, RiCheckLine } from "@remixicon/react"
@@ -22,9 +21,9 @@ function detectInputType(input: string): "email" | "phone" {
 }
 
 /**
- * Format phone number for Clerk (add +1 prefix if needed)
+ * Format phone number (add +1 prefix if needed)
  */
-function formatPhoneForClerk(phone: string): string {
+function formatPhone(phone: string): string {
   const digits = phone.replace(/\D/g, "")
   
   if (digits.length === 10) {
@@ -38,8 +37,6 @@ function formatPhoneForClerk(phone: string): string {
 }
 
 export default function WaitlistPage() {
-  const { isLoaded, signUp } = useSignUp()
-
   // Form state
   const [identifier, setIdentifier] = useState("")
   const [submitted, setSubmitted] = useState(false)
@@ -52,44 +49,44 @@ export default function WaitlistPage() {
   const handleWaitlistSignup = useCallback(
     async (e: FormEvent) => {
       e.preventDefault()
-      if (!isLoaded || !identifier) return
+      if (!identifier) return
 
       setIsLoading(true)
       setError("")
 
       const detectedType = detectInputType(identifier)
+      const formattedIdentifier = detectedType === "phone" 
+        ? formatPhone(identifier)
+        : identifier
 
       try {
-        const formattedIdentifier = detectedType === "phone" 
-          ? formatPhoneForClerk(identifier)
-          : identifier
+        const response = await fetch('/api/waitlist', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            identifier: formattedIdentifier,
+            type: detectedType,
+          }),
+        })
 
-        if (detectedType === "email") {
-          await signUp.create({
-            emailAddress: formattedIdentifier,
-          })
-        } else {
-          await signUp.create({
-            phoneNumber: formattedIdentifier,
-          })
+        const data = await response.json()
+
+        if (!response.ok) {
+          setError(data.error || "Failed to join waitlist")
+          return
         }
 
         // Successfully added to waitlist
         setSubmitted(true)
-      } catch (err: unknown) {
-        // Handle specific errors
-        const clerkError = (err as { errors?: Array<{ code?: string }> })?.errors?.[0]
-        
-        if (clerkError?.code === "form_identifier_exists") {
-          setError("You're already on the waitlist")
-        } else {
-          setError("Enter a valid email or phone number")
-        }
+      } catch (err) {
+        setError("Something went wrong. Please try again.")
       } finally {
         setIsLoading(false)
       }
     },
-    [isLoaded, signUp, identifier]
+    [identifier]
   )
 
   return (
@@ -112,9 +109,6 @@ export default function WaitlistPage() {
           {/* Form */}
           <div className="grid gap-6">
             <form onSubmit={handleWaitlistSignup}>
-              {/* Clerk CAPTCHA */}
-              <div id="clerk-captcha" />
-              
               <div className="grid gap-4">
                 {/* Email or Phone Input */}
                 <div className="grid gap-2">
