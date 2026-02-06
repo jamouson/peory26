@@ -10,7 +10,7 @@ import * as React from "react"
 import {
   IconChartBar, IconDashboard, IconHelp, IconInnerShadowTop,
   IconPackage, IconSearch, IconSettings, IconShoppingCart,
-  IconTags, IconTruck, IconUsers,
+  IconTag, IconTruck, IconUsers,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -26,13 +26,13 @@ const data = {
   navMain: [
     { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
     { title: "Products", url: "/products", icon: IconPackage },
+    { title: "Variations", url: "/dashboard/variations", icon: IconTag },
     { title: "Orders", url: "/dashboard/orders", icon: IconShoppingCart },
     { title: "Customers", url: "/dashboard/customers", icon: IconUsers },
     { title: "Analytics", url: "/dashboard/analytics", icon: IconChartBar },
   ],
   navSecondary: [
     { title: "Shipping", url: "/dashboard/shipping", icon: IconTruck },
-    { title: "Discounts", url: "/dashboard/discounts", icon: IconTags },
     { title: "Settings", url: "/dashboard/settings", icon: IconSettings },
     { title: "Get Help", url: "#", icon: IconHelp },
     { title: "Search", url: "#", icon: IconSearch },

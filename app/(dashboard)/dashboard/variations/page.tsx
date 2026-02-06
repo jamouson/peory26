@@ -1,8 +1,7 @@
 // =============================================================================
-// File: src/app/(dashboard)/dashboard/products/page.tsx
-// Description: Admin product list page. Same pattern as variations/page.tsx —
-//   fetches data, passes it to the ProductsDataTable component which handles
-//   all table logic (TanStack React Table, DnD, pagination, filtering, etc).
+// File: src/app/(dashboard)/dashboard/variations/page.tsx
+// Description: Variations management page. Same pattern as dashboard/page.tsx —
+//   fetches data, passes it to the VariationsDataTable component.
 // =============================================================================
 
 "use client"
@@ -10,21 +9,20 @@
 import * as React from "react"
 import { IconLoader2 } from "@tabler/icons-react"
 
-import { ProductsDataTable } from "@/components/products-data-table"
+import { VariationsDataTable } from "@/components/variations-data-table"
 
-export default function ProductsPage() {
+export default function VariationsPage() {
   const [data, setData] = React.useState([])
   const [loading, setLoading] = React.useState(true)
 
   const fetchData = React.useCallback(async () => {
     try {
-      // Fetch all products (high limit) — TanStack handles client-side pagination
-      const res = await fetch("/api/admin/products?limit=500&sort=created_at&order=desc")
+      const res = await fetch("/api/admin/variations")
       if (!res.ok) throw new Error("Failed to fetch")
       const json = await res.json()
-      setData(json.products || [])
+      setData(json.templates || [])
     } catch {
-      console.error("Failed to load products")
+      console.error("Failed to load variations")
     } finally {
       setLoading(false)
     }
@@ -44,7 +42,7 @@ export default function ProductsPage() {
 
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-      <ProductsDataTable data={data} onRefresh={fetchData} />
+      <VariationsDataTable data={data} onRefresh={fetchData} />
     </div>
   )
 }
