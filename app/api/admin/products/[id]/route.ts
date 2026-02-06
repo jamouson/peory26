@@ -66,7 +66,7 @@ export async function PUT(
       "meta_description", "requires_shipping", "is_featured",
     ]
 
-    const updates: Record<string, unknown> = { updated_by: admin.userId }
+    const updates: Record<string, unknown> = {}
 
     for (const key of allowedFields) {
       if (body[key] !== undefined) {
@@ -142,7 +142,7 @@ export async function DELETE(
   if (count && count > 0) {
     const { error } = await supabaseAdmin
       .from("products")
-      .update({ status: "archived", updated_by: admin.userId })
+      .update({ status: "archived" })
       .eq("id", id)
 
     if (error) {

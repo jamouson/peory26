@@ -50,6 +50,7 @@ export default function ProductsPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [bulkLoading, setBulkLoading] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [editingProductId, setEditingProductId] = useState<string | null>(null)
 
   const fetchProducts = useCallback(async () => {
     setLoading(true)
@@ -128,7 +129,7 @@ export default function ProductsPage() {
           <h1 className="text-xl font-semibold">Products</h1>
           <p className="text-sm text-muted-foreground">{pagination.total} product{pagination.total !== 1 ? "s" : ""} total</p>
         </div>
-        <Button onClick={() => setDrawerOpen(true)}>
+        <Button onClick={() => { setEditingProductId(null); setDrawerOpen(true) }}>
           <IconPlus className="mr-1.5 h-4 w-4" />Add Product
         </Button>
       </div>
@@ -187,7 +188,7 @@ export default function ProductsPage() {
               products.map((product) => {
                 const inventory = getInventory(product)
                 return (
-                  <TableRow key={product.id} className={cn("cursor-pointer", selected.has(product.id) && "bg-muted/50")} onClick={() => router.push(`/dashboard/products/${product.id}/edit`)}>
+                  <TableRow key={product.id} className={cn("cursor-pointer", selected.has(product.id) && "bg-muted/50")} onClick={() => { setEditingProductId(product.id); setDrawerOpen(true) }}>
                     <TableCell onClick={(e) => e.stopPropagation()}><Checkbox checked={selected.has(product.id)} onCheckedChange={() => toggleSelect(product.id)} /></TableCell>
                     <TableCell>
                       {product.images?.[0]
@@ -211,7 +212,7 @@ export default function ProductsPage() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><IconDots className="h-4 w-4" /></Button></DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem onClick={() => router.push(`/dashboard/products/${product.id}/edit`)}><IconPencil className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { setEditingProductId(product.id); setDrawerOpen(true) }}><IconPencil className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
                           {product.status === "published" && <DropdownMenuItem asChild><a href={`/products/${product.slug}`} target="_blank"><IconEye className="mr-2 h-4 w-4" />View Live</a></DropdownMenuItem>}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={async () => {
@@ -248,6 +249,7 @@ export default function ProductsPage() {
       <ProductDrawer
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
+        productId={editingProductId}
         onSuccess={() => fetchProducts()}
       />
     </div>

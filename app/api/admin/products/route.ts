@@ -124,8 +124,6 @@ export async function POST(request: NextRequest) {
       meta_description: meta_description ?? null,
       requires_shipping: requires_shipping ?? true,
       is_featured: is_featured ?? false,
-      created_by: admin.userId,
-      updated_by: admin.userId,
     }
 
     if (status === "published") {
@@ -172,7 +170,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const allowedFields = ["status", "is_featured"]
-    const safeUpdates: Record<string, unknown> = { updated_by: admin.userId }
+    const safeUpdates: Record<string, unknown> = {}
 
     for (const key of Object.keys(updates)) {
       if (allowedFields.includes(key)) {
