@@ -1,3 +1,4 @@
+// components/ui/Navbar.tsx
 "use client"
 
 import { siteConfig } from "@/app/siteConfig"
@@ -8,9 +9,76 @@ import Link from "next/link"
 import React from "react"
 import { DatabaseLogo } from "@/components/icons/DatabaseLogo"
 import { Button } from "../Button"
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
+import { SignedIn, SignedOut, useClerk, useUser } from "@clerk/nextjs"
 import { ModeToggle } from "@/components/mode-toggle"
 import { CartIcon } from "@/components/cart"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  IconUser,
+  IconLayoutDashboard,
+  IconShoppingBag,
+  IconLogout,
+} from "@tabler/icons-react"
+
+function UserDropdown() {
+  const { user } = useUser()
+  const { signOut } = useClerk()
+
+  if (!user) return null
+
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <button className="flex size-8 items-center justify-center rounded-full bg-gray-200 outline-none hover:bg-gray-300 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:bg-gray-700 dark:hover:bg-gray-600">
+          <IconUser className="size-4 text-gray-600 dark:text-gray-300" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">
+              {user.fullName || "User"}
+            </p>
+            <p className="text-muted-foreground text-xs leading-none">
+              {user.primaryEmailAddress?.emailAddress}
+            </p>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard">
+              <IconLayoutDashboard className="mr-2 size-4" />
+              Dashboard
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/orders">
+              <IconShoppingBag className="mr-2 size-4" />
+              My Orders
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => signOut({ redirectUrl: "/" })}
+          className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+        >
+          <IconLogout className="mr-2 size-4" />
+          Sign Out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
 
 export function Navigation() {
   const scrolled = useScroll(15)
@@ -75,7 +143,7 @@ export function Navigation() {
             <ModeToggle />
             <SignedIn>
               <CartIcon />
-              <UserButton />
+              <UserDropdown />
             </SignedIn>
             <SignedOut>
               <Link href="/sign-in">
@@ -89,7 +157,7 @@ export function Navigation() {
             <ModeToggle />
             <SignedIn>
               <CartIcon />
-              <UserButton />
+              <UserDropdown />
             </SignedIn>
             <SignedOut>
               <Link href="/sign-in">
