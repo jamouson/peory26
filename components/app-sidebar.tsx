@@ -1,7 +1,7 @@
 // =============================================================================
 // File: src/components/app-sidebar.tsx
 // Description: Main dashboard sidebar navigation for e-commerce admin.
-//   UPDATED: Products link now points to /products instead of /dashboard/products.
+//   UPDATED: Variations nested under Products as a collapsible sub-menu.
 // =============================================================================
 
 "use client"
@@ -10,7 +10,7 @@ import * as React from "react"
 import {
   IconChartBar, IconDashboard, IconHelp, IconInnerShadowTop,
   IconPackage, IconSearch, IconSettings, IconShoppingCart,
-  IconTag, IconTruck, IconUsers,
+  IconTruck, IconUsers,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -25,8 +25,15 @@ import { useUser } from "@clerk/nextjs"
 const data = {
   navMain: [
     { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
-    { title: "Products", url: "/dashboard/products", icon: IconPackage },
-    { title: "Variations", url: "/dashboard/variations", icon: IconTag },
+    {
+      title: "Products",
+      url: "/dashboard/products",
+      icon: IconPackage,
+      items: [
+        { title: "All Products", url: "/dashboard/products" },
+        { title: "Variations", url: "/dashboard/variations" },
+      ],
+    },
     { title: "Orders", url: "/dashboard/orders", icon: IconShoppingCart },
     { title: "Customers", url: "/dashboard/customers", icon: IconUsers },
     { title: "Analytics", url: "/dashboard/analytics", icon: IconChartBar },
