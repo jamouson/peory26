@@ -733,7 +733,7 @@ export function ProductsDataTable({
             </DropdownMenuContent>
           </DropdownMenu>
           {/* Add product */}
-          <Button variant="outline" size="sm" onClick={() => openDrawer(null)}>
+          <Button variant="default" size="sm" onClick={() => openDrawer(null)}>
             <IconPlus />
             <span className="hidden lg:inline">Add Product</span>
           </Button>
