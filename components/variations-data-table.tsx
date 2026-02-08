@@ -41,6 +41,7 @@ import {
   IconLoader2,
   IconPencil,
   IconPlus,
+  IconSearch,
   IconTrash,
   IconX,
 } from "@tabler/icons-react"
@@ -374,6 +375,10 @@ export function VariationsDataTable({
     pageIndex: 0,
     pageSize: 10,
   })
+  const [globalFilter, setGlobalFilter] = React.useState("")
+  const [searchExpanded, setSearchExpanded] = React.useState(false)
+  const isMobile = useIsMobile()
+  const searchInputRef = React.useRef<HTMLInputElement>(null)
   const sortableId = React.useId()
   const sensors = useSensors(
     useSensor(MouseSensor, {}),
@@ -417,6 +422,7 @@ export function VariationsDataTable({
       rowSelection,
       columnFilters,
       pagination,
+      globalFilter,
     },
     getRowId: (row) => row.id,
     enableRowSelection: true,
@@ -425,6 +431,11 @@ export function VariationsDataTable({
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const search = filterValue.toLowerCase()
+      return row.original.name.toLowerCase().includes(search)
+    },
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -483,111 +494,173 @@ export function VariationsDataTable({
       className="w-full flex-col justify-start gap-6"
     >
       <div className="flex items-center justify-between px-4 lg:px-6">
-        <Label htmlFor="view-selector" className="sr-only">
-          View
-        </Label>
-        <Select defaultValue="outline">
-          <SelectTrigger
-            className="flex w-fit @4xl/main:hidden"
-            size="sm"
-            id="view-selector"
-          >
-            <SelectValue placeholder="Select a view" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="outline">All Variations</SelectItem>
-          </SelectContent>
-        </Select>
-        <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
-          <TabsTrigger value="outline">
-            All Variations <Badge variant="secondary">{data.length}</Badge>
-          </TabsTrigger>
-        </TabsList>
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <IconLayoutColumns />
-                <span className="hidden lg:inline">Customize Columns</span>
-                <span className="lg:hidden">Columns</span>
-                <IconChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {table
-                .getAllColumns()
-                .filter(
-                  (column) =>
-                    typeof column.accessorFn !== "undefined" &&
-                    column.getCanHide()
-                )
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  )
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          {showCreate ? (
-            <div className="flex items-center gap-1.5">
+        {/* Left: Tab selector */}
+        {!(isMobile && searchExpanded) && (
+          <>
+            <Label htmlFor="view-selector" className="sr-only">
+              View
+            </Label>
+            <Select defaultValue="outline">
+              <SelectTrigger
+                className="flex w-fit @4xl/main:hidden"
+                size="sm"
+                id="view-selector"
+              >
+                <SelectValue placeholder="Select a view" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="outline">All Variations</SelectItem>
+              </SelectContent>
+            </Select>
+            <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
+              <TabsTrigger value="outline">
+                All Variations <Badge variant="secondary">{data.length}</Badge>
+              </TabsTrigger>
+            </TabsList>
+          </>
+        )}
+
+        {/* Right: Actions — or expanded search on mobile */}
+        {isMobile && searchExpanded ? (
+          /* ── Mobile expanded search ────────────────────────── */
+          <div className="flex w-full items-center gap-2">
+            <div className="relative flex-1">
+              <IconSearch className="text-muted-foreground absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2" />
               <Input
-                placeholder="e.g. Size, Flavor..."
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
+                ref={searchInputRef}
+                placeholder="Search variations..."
+                value={globalFilter}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                className="h-8 w-full pl-8"
+                autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleCreate()
                   if (e.key === "Escape") {
-                    setShowCreate(false)
-                    setNewName("")
+                    setSearchExpanded(false)
+                    setGlobalFilter("")
                   }
                 }}
-                className="h-8 w-44"
-                disabled={creating}
-                autoFocus
               />
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchExpanded(false)
+                setGlobalFilter("")
+              }}
+            >
+              <IconX className="size-4" />
+            </Button>
+          </div>
+        ) : (
+          /* ── Normal toolbar ────────────────────────────────── */
+          <div className="flex items-center gap-2">
+            {/* Search — icon on mobile, input on desktop */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-8 lg:hidden"
+              onClick={() => setSearchExpanded(true)}
+            >
+              <IconSearch className="size-3.5" />
+              <span className="sr-only">Search</span>
+            </Button>
+            <div className="relative hidden lg:block">
+              <IconSearch className="text-muted-foreground absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2" />
+              <Input
+                placeholder="Search variations..."
+                value={globalFilter}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                className="h-8 w-44 pl-8"
+              />
+            </div>
+            {/* Column visibility */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <IconLayoutColumns />
+                  <span className="hidden lg:inline">Customize Columns</span>
+                  <span className="hidden sm:inline lg:hidden">Columns</span>
+                  <IconChevronDown className="hidden sm:block" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {table
+                  .getAllColumns()
+                  .filter(
+                    (column) =>
+                      typeof column.accessorFn !== "undefined" &&
+                      column.getCanHide()
+                  )
+                  .map((column) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) =>
+                          column.toggleVisibility(!!value)
+                        }
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    )
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {/* Add variation */}
+            {showCreate ? (
+              <div className="flex items-center gap-1.5">
+                <Input
+                  placeholder="e.g. Size, Flavor..."
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleCreate()
+                    if (e.key === "Escape") {
+                      setShowCreate(false)
+                      setNewName("")
+                    }
+                  }}
+                  className="h-8 w-44"
+                  disabled={creating}
+                  autoFocus
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCreate}
+                  disabled={!newName.trim() || creating}
+                >
+                  {creating ? (
+                    <IconLoader2 className="size-4 animate-spin" />
+                  ) : (
+                    <IconCheck className="size-4" />
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowCreate(false)
+                    setNewName("")
+                  }}
+                >
+                  <IconX className="size-4" />
+                </Button>
+              </div>
+            ) : (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleCreate}
-                disabled={!newName.trim() || creating}
+                onClick={() => setShowCreate(true)}
               >
-                {creating ? (
-                  <IconLoader2 className="size-4 animate-spin" />
-                ) : (
-                  <IconCheck className="size-4" />
-                )}
+                <IconPlus />
+                <span className="hidden lg:inline">Add Variation</span>
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setShowCreate(false)
-                  setNewName("")
-                }}
-              >
-                <IconX className="size-4" />
-              </Button>
-            </div>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCreate(true)}
-            >
-              <IconPlus />
-              <span className="hidden lg:inline">Add Variation</span>
-            </Button>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
       <TabsContent
         value="outline"
@@ -636,7 +709,9 @@ export function VariationsDataTable({
                       colSpan={columns.length}
                       className="h-24 text-center"
                     >
-                      No results.
+                      {globalFilter
+                        ? "No variations match your search."
+                        : "No results."}
                     </TableCell>
                   </TableRow>
                 )}

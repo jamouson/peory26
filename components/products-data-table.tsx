@@ -44,6 +44,7 @@ import {
   IconRocket,
   IconSearch,
   IconTrash,
+  IconX,
 } from "@tabler/icons-react"
 import {
   flexRender,
@@ -63,6 +64,7 @@ import {
 import { toast } from "sonner"
 import { z } from "zod"
 
+import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -523,6 +525,9 @@ export function ProductsDataTable({
   const [editingProductId, setEditingProductId] = React.useState<string | null>(
     null
   )
+  const [searchExpanded, setSearchExpanded] = React.useState(false)
+  const isMobile = useIsMobile()
+  const searchInputRef = React.useRef<HTMLInputElement>(null)
 
   const openDrawer = React.useCallback((id: string | null) => {
     setEditingProductId(id)
@@ -656,88 +661,138 @@ export function ProductsDataTable({
     >
       {/* ── Toolbar ────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 lg:px-6">
-        <Label htmlFor="view-selector" className="sr-only">
-          View
-        </Label>
-        <Select defaultValue="outline">
-          <SelectTrigger
-            className="flex w-fit @4xl/main:hidden"
-            size="sm"
-            id="view-selector"
-          >
-            <SelectValue placeholder="Select a view" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="outline">All Products</SelectItem>
-          </SelectContent>
-        </Select>
-        <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
-          <TabsTrigger value="outline">
-            All Products <Badge variant="secondary">{data.length}</Badge>
-          </TabsTrigger>
-        </TabsList>
-        <div className="flex items-center gap-2">
-          {/* Search */}
-          <div className="relative">
-            <IconSearch className="text-muted-foreground absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2" />
-            <Input
-              placeholder="Search products..."
-              value={globalFilter}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              className="h-8 w-44 pl-8"
-            />
+        {/* Left: Tab selector */}
+        {!(isMobile && searchExpanded) && (
+          <>
+            <Label htmlFor="view-selector" className="sr-only">
+              View
+            </Label>
+            <Select defaultValue="outline">
+              <SelectTrigger
+                className="flex w-fit @4xl/main:hidden"
+                size="sm"
+                id="view-selector"
+              >
+                <SelectValue placeholder="Select a view" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="outline">All Products</SelectItem>
+              </SelectContent>
+            </Select>
+            <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
+              <TabsTrigger value="outline">
+                All Products <Badge variant="secondary">{data.length}</Badge>
+              </TabsTrigger>
+            </TabsList>
+          </>
+        )}
+
+        {/* Right: Actions — or expanded search on mobile */}
+        {isMobile && searchExpanded ? (
+          /* ── Mobile expanded search ────────────────────────── */
+          <div className="flex w-full items-center gap-2">
+            <div className="relative flex-1">
+              <IconSearch className="text-muted-foreground absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2" />
+              <Input
+                ref={searchInputRef}
+                placeholder="Search products..."
+                value={globalFilter}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                className="h-8 w-full pl-8"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setSearchExpanded(false)
+                    setGlobalFilter("")
+                  }
+                }}
+              />
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSearchExpanded(false)
+                setGlobalFilter("")
+              }}
+            >
+              <IconX className="size-4" />
+            </Button>
           </div>
-          {/* Status filter */}
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger size="sm" className="w-[130px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="published">Published</SelectItem>
-              <SelectItem value="scheduled">Scheduled</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
-            </SelectContent>
-          </Select>
-          {/* Column visibility */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <IconLayoutColumns />
-                <span className="hidden lg:inline">Customize Columns</span>
-                <span className="lg:hidden">Columns</span>
-                <IconChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {table
-                .getAllColumns()
-                .filter(
-                  (column) =>
-                    typeof column.accessorFn !== "undefined" &&
-                    column.getCanHide()
-                )
-                .map((column) => (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          {/* Add product */}
-          <Button variant="default" size="sm" onClick={() => openDrawer(null)}>
-            <IconPlus />
-            <span className="hidden lg:inline">Add Product</span>
-          </Button>
-        </div>
+        ) : (
+          /* ── Normal toolbar ────────────────────────────────── */
+          <div className="flex items-center gap-2">
+            {/* Search — icon on mobile, input on desktop */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-8 lg:hidden"
+              onClick={() => setSearchExpanded(true)}
+            >
+              <IconSearch className="size-3.5" />
+              <span className="sr-only">Search</span>
+            </Button>
+            <div className="relative hidden lg:block">
+              <IconSearch className="text-muted-foreground absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2" />
+              <Input
+                placeholder="Search products..."
+                value={globalFilter}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                className="h-8 w-44 pl-8"
+              />
+            </div>
+            {/* Status filter — compact on mobile */}
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger size="sm" className="w-auto lg:w-[130px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="published">Published</SelectItem>
+                <SelectItem value="scheduled">Scheduled</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
+              </SelectContent>
+            </Select>
+            {/* Column visibility */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <IconLayoutColumns />
+                  <span className="hidden lg:inline">Customize Columns</span>
+                  <span className="hidden sm:inline lg:hidden">Columns</span>
+                  <IconChevronDown className="hidden sm:block" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {table
+                  .getAllColumns()
+                  .filter(
+                    (column) =>
+                      typeof column.accessorFn !== "undefined" &&
+                      column.getCanHide()
+                  )
+                  .map((column) => (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {/* Add product */}
+            <Button variant="default" size="sm" onClick={() => openDrawer(null)}>
+              <IconPlus />
+              <span className="hidden lg:inline">Add Product</span>
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* ── Bulk Actions ───────────────────────────────────────── */}
