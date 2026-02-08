@@ -25,7 +25,7 @@ import { useUser } from "@clerk/nextjs"
 const data = {
   navMain: [
     { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
-    { title: "Products", url: "/products", icon: IconPackage },
+    { title: "Products", url: "/dashboard/products", icon: IconPackage },
     { title: "Variations", url: "/dashboard/variations", icon: IconTag },
     { title: "Orders", url: "/dashboard/orders", icon: IconShoppingCart },
     { title: "Customers", url: "/dashboard/customers", icon: IconUsers },

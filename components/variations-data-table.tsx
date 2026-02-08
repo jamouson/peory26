@@ -74,7 +74,6 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from "@/components/ui/drawer"
 import {
   DropdownMenu,
@@ -154,11 +153,12 @@ function DragHandle({ id }: { id: string }) {
 }
 
 // ---------------------------------------------------------------------------
-// Columns
+// Columns — accepts onEdit callback so both name click + actions menu work
 // ---------------------------------------------------------------------------
 
 function getColumns(
-  onRefresh: () => Promise<void>
+  onRefresh: () => Promise<void>,
+  onEdit: (item: VariationTemplate) => void
 ): ColumnDef<VariationTemplate>[] {
   return [
     {
@@ -198,7 +198,15 @@ function getColumns(
       accessorKey: "name",
       header: "Name",
       cell: ({ row }) => {
-        return <TableCellViewer item={row.original} onRefresh={onRefresh} />
+        return (
+          <Button
+            variant="link"
+            className="text-foreground w-fit px-0 text-left"
+            onClick={() => onEdit(row.original)}
+          >
+            {row.original.name}
+          </Button>
+        )
       },
       enableHiding: false,
     },
@@ -251,21 +259,27 @@ function getColumns(
     {
       id: "actions",
       cell: ({ row }) => (
-        <ActionsMenu item={row.original} onRefresh={onRefresh} />
+        <ActionsMenu
+          item={row.original}
+          onEdit={() => onEdit(row.original)}
+          onRefresh={onRefresh}
+        />
       ),
     },
   ]
 }
 
 // ---------------------------------------------------------------------------
-// Actions Menu (replaces the original Edit/Copy/Favorite/Delete)
+// Actions Menu — now accepts onEdit callback
 // ---------------------------------------------------------------------------
 
 function ActionsMenu({
   item,
+  onEdit,
   onRefresh,
 }: {
   item: VariationTemplate
+  onEdit: () => void
   onRefresh: () => Promise<void>
 }) {
   const handleDelete = async () => {
@@ -298,7 +312,7 @@ function ActionsMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-32">
-        <DropdownMenuItem>Edit</DropdownMenuItem>
+        <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={handleDelete}>
           Delete
@@ -338,7 +352,7 @@ function DraggableRow({ row }: { row: Row<VariationTemplate> }) {
 }
 
 // ---------------------------------------------------------------------------
-// Main DataTable export (same structure as original)
+// Main DataTable export — drawer state lifted here
 // ---------------------------------------------------------------------------
 
 export function VariationsDataTable({
@@ -372,7 +386,22 @@ export function VariationsDataTable({
     setData(initialData)
   }, [initialData])
 
-  const columns = React.useMemo(() => getColumns(onRefresh), [onRefresh])
+  // Drawer state – lifted so both name-click and actions-menu can open it
+  const [selectedTemplate, setSelectedTemplate] =
+    React.useState<VariationTemplate | null>(null)
+
+  // Keep selectedTemplate in sync with latest data after refresh
+  React.useEffect(() => {
+    if (selectedTemplate) {
+      const updated = initialData.find((t) => t.id === selectedTemplate.id)
+      if (updated) setSelectedTemplate(updated)
+    }
+  }, [initialData]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const columns = React.useMemo(
+    () => getColumns(onRefresh, (item) => setSelectedTemplate(item)),
+    [onRefresh]
+  )
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => data?.map(({ id }) => id) || [],
@@ -693,32 +722,40 @@ export function VariationsDataTable({
           </div>
         </div>
       </TabsContent>
+
+      {/* Drawer – controlled by selectedTemplate state */}
+      <VariationDrawer
+        template={selectedTemplate}
+        onClose={() => setSelectedTemplate(null)}
+        onRefresh={onRefresh}
+      />
     </Tabs>
   )
 }
 
 // ---------------------------------------------------------------------------
-// TableCellViewer — Drawer opens from name click (same pattern as original)
-// Original showed charts + form fields. This shows value management.
+// VariationDrawer — controlled drawer, replaces old TableCellViewer
 // ---------------------------------------------------------------------------
 
-function TableCellViewer({
-  item,
+function VariationDrawer({
+  template,
+  onClose,
   onRefresh,
 }: {
-  item: VariationTemplate
+  template: VariationTemplate | null
+  onClose: () => void
   onRefresh: () => Promise<void>
 }) {
   const isMobile = useIsMobile()
   const [newValue, setNewValue] = React.useState("")
   const [adding, setAdding] = React.useState(false)
-  const values = item.variation_template_values || []
+  const values = template?.variation_template_values || []
 
   const handleAddValue = async () => {
-    if (!newValue.trim()) return
+    if (!template || !newValue.trim()) return
     setAdding(true)
     try {
-      const res = await fetch(`/api/admin/variations/${item.id}/values`, {
+      const res = await fetch(`/api/admin/variations/${template.id}/values`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ value: newValue.trim() }),
@@ -739,15 +776,16 @@ function TableCellViewer({
   }
 
   return (
-    <Drawer direction={isMobile ? "bottom" : "right"}>
-      <DrawerTrigger asChild>
-        <Button variant="link" className="text-foreground w-fit px-0 text-left">
-          {item.name}
-        </Button>
-      </DrawerTrigger>
+    <Drawer
+      direction={isMobile ? "bottom" : "right"}
+      open={!!template}
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+    >
       <DrawerContent>
         <DrawerHeader className="gap-1">
-          <DrawerTitle>{item.name}</DrawerTitle>
+          <DrawerTitle>{template?.name}</DrawerTitle>
           <DrawerDescription>
             Manage values for this variation template
           </DrawerDescription>
@@ -790,22 +828,23 @@ function TableCellViewer({
               </p>
             ) : (
               <div className="flex flex-col gap-1">
-                {values.map((v) => (
-                  <ValueRow
-                    key={v.id}
-                    templateId={item.id}
-                    value={v}
-                    onRefresh={onRefresh}
-                  />
-                ))}
+                {template &&
+                  values.map((v) => (
+                    <ValueRow
+                      key={v.id}
+                      templateId={template.id}
+                      value={v}
+                      onRefresh={onRefresh}
+                    />
+                  ))}
               </div>
             )}
           </div>
         </div>
         <DrawerFooter>
-          <DrawerClose asChild>
-            <Button variant="outline">Done</Button>
-          </DrawerClose>
+          <Button variant="outline" onClick={onClose}>
+            Done
+          </Button>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
