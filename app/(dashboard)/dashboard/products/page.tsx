@@ -18,7 +18,7 @@ export default function ProductsPage() {
 
   const fetchData = React.useCallback(async () => {
     try {
-      // Fetch all products (high limit) — TanStack handles client-side pagination
+      // Fetch all products (high limit) — TanStack handles client-side 
       const res = await fetch("/api/admin/products?limit=500&sort=created_at&order=desc")
       if (!res.ok) throw new Error("Failed to fetch")
       const json = await res.json()
