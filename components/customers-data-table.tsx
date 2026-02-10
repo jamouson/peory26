@@ -3,6 +3,8 @@
 // Description: Admin customers data table with TanStack React Table, search,
 //   status filter, bulk actions, and create/edit sheet (right side drawer).
 //   Pattern matches products-data-table.tsx for consistency.
+//   UPDATED: table-fixed layout with explicit column sizes, dynamic skeleton
+//   columns that respect column visibility for zero-jump loading.
 // =============================================================================
 
 "use client"
@@ -79,6 +81,10 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  TableSkeleton,
+  type SkeletonColumn,
+} from "@/components/ui/table-skeleton"
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -137,6 +143,24 @@ const SOCIAL_PLATFORMS = [
   { key: "snapchat", label: "Snapchat", placeholder: "@handle" },
   { key: "pinterest", label: "Pinterest", placeholder: "username or URL" },
   { key: "linkedin", label: "LinkedIn", placeholder: "profile URL" },
+]
+
+// ---------------------------------------------------------------------------
+// Skeleton column config map — keyed by column id so we can derive visible
+// skeleton columns dynamically based on columnVisibility state. This ensures
+// the skeleton cell count always matches the rendered header count (important
+// on mobile where phone / company / total_spent are hidden).
+// ---------------------------------------------------------------------------
+
+const SKELETON_MAP: { id: string; skeleton: SkeletonColumn }[] = [
+  { id: "select", skeleton: { width: "w-4", variant: "checkbox", align: "center" } },
+  { id: "name", skeleton: { width: "w-28", variant: "stacked-text", secondLine: "w-36" } },
+  { id: "phone", skeleton: { width: "w-20" } },
+  { id: "company", skeleton: { width: "w-20" } },
+  { id: "total_orders", skeleton: { width: "w-10" } },
+  { id: "total_spent", skeleton: { width: "w-14" } },
+  { id: "is_active", skeleton: { width: "w-16", variant: "badge" } },
+  { id: "actions", skeleton: { width: "w-6", align: "center" } },
 ]
 
 // ---------------------------------------------------------------------------
@@ -240,7 +264,7 @@ function ActionsMenu({
 }
 
 // ---------------------------------------------------------------------------
-// Columns
+// Columns — explicit `size` on every column + `flexible` meta on name
 // ---------------------------------------------------------------------------
 
 function getColumns(
@@ -275,6 +299,7 @@ function getColumns(
       ),
       enableSorting: false,
       enableHiding: false,
+      size: 40,
     },
     {
       accessorKey: "name",
@@ -287,15 +312,17 @@ function getColumns(
             className="flex flex-col text-left"
             onClick={() => onEditCustomer(customer)}
           >
-            <span className="font-medium">
+            <span className="text-foreground truncate font-medium hover:underline">
               {customer.first_name} {customer.last_name}
             </span>
-            <span className="text-muted-foreground text-xs">
+            <span className="text-muted-foreground truncate text-xs">
               {customer.email}
             </span>
           </button>
         )
       },
+      enableHiding: false,
+      meta: { flexible: true },
     },
     {
       accessorKey: "phone",
@@ -305,6 +332,7 @@ function getColumns(
           {row.original.phone || "—"}
         </span>
       ),
+      size: 130,
     },
     {
       accessorKey: "company",
@@ -314,22 +342,25 @@ function getColumns(
           {row.original.company || "—"}
         </span>
       ),
+      size: 130,
     },
     {
       accessorKey: "total_orders",
       header: "Orders",
       cell: ({ row }) => (
-        <span className="text-sm">{row.original.total_orders}</span>
+        <span className="text-sm tabular-nums">{row.original.total_orders}</span>
       ),
+      size: 70,
     },
     {
       accessorKey: "total_spent",
       header: "Spent",
       cell: ({ row }) => (
-        <span className="text-sm">
+        <span className="text-sm font-mono tabular-nums">
           ${Number(row.original.total_spent).toFixed(2)}
         </span>
       ),
+      size: 100,
     },
     {
       accessorKey: "is_active",
@@ -343,6 +374,7 @@ function getColumns(
         if (filterValue === "inactive") return !row.original.is_active
         return true
       },
+      size: 100,
     },
     {
       id: "actions",
@@ -353,6 +385,7 @@ function getColumns(
           onRefresh={onRefresh}
         />
       ),
+      size: 50,
     },
   ]
 }
@@ -375,7 +408,6 @@ function CustomerSheet({
   const isEdit = !!customer
   const [saving, setSaving] = React.useState(false)
 
-  // Form state
   const [firstName, setFirstName] = React.useState("")
   const [lastName, setLastName] = React.useState("")
   const [email, setEmail] = React.useState("")
@@ -383,13 +415,9 @@ function CustomerSheet({
   const [company, setCompany] = React.useState("")
   const [adminNotes, setAdminNotes] = React.useState("")
   const [isActive, setIsActive] = React.useState(true)
-
-  // Social media
   const [socialEntries, setSocialEntries] = React.useState<
     { key: string; value: string }[]
   >([])
-
-  // Address state (edit mode — multiple addresses)
   const [addresses, setAddresses] = React.useState<
     z.infer<typeof addressSchema>[]
   >([])
@@ -397,8 +425,6 @@ function CustomerSheet({
   const [editingAddress, setEditingAddress] = React.useState<
     z.infer<typeof addressSchema> | null
   >(null)
-
-  // Address state (create mode — single initial address)
   const [addrLabel, setAddrLabel] = React.useState("Home")
   const [addrLine1, setAddrLine1] = React.useState("")
   const [addrLine2, setAddrLine2] = React.useState("")
@@ -408,7 +434,6 @@ function CustomerSheet({
   const [addrCountry, setAddrCountry] = React.useState("US")
   const [addrPhone, setAddrPhone] = React.useState("")
 
-  // Reset form when customer changes
   React.useEffect(() => {
     if (customer) {
       setFirstName(customer.first_name)
@@ -419,7 +444,6 @@ function CustomerSheet({
       setAdminNotes(customer.admin_notes || "")
       setIsActive(customer.is_active)
       setAddresses(customer.customer_addresses || [])
-      // Social media
       const sm = customer.social_media || {}
       setSocialEntries(
         Object.entries(sm)
@@ -435,9 +459,7 @@ function CustomerSheet({
       setAdminNotes("")
       setIsActive(true)
       setAddresses([])
-      // Social media
       setSocialEntries([])
-      // Reset create-mode address fields
       setAddrLabel("Home")
       setAddrLine1("")
       setAddrLine2("")
@@ -456,100 +478,60 @@ function CustomerSheet({
       toast.error("First name, last name, and email are required")
       return
     }
-
     setSaving(true)
     try {
       const socialMedia: Record<string, string> = {}
       for (const entry of socialEntries) {
         if (entry.value.trim()) socialMedia[entry.key] = entry.value.trim()
       }
-
       const payload = {
-        first_name: firstName,
-        last_name: lastName,
-        email,
-        phone: phone || null,
-        company: company || null,
-        admin_notes: adminNotes || null,
-        tags: customer?.tags || [],
+        first_name: firstName, last_name: lastName, email,
+        phone: phone || null, company: company || null,
+        admin_notes: adminNotes || null, tags: customer?.tags || [],
         social_media: Object.keys(socialMedia).length > 0 ? socialMedia : null,
         is_active: isActive,
       }
-
-      const url = isEdit
-        ? `/api/admin/customers/${customer.id}`
-        : "/api/admin/customers"
-
+      const url = isEdit ? `/api/admin/customers/${customer.id}` : "/api/admin/customers"
       const res = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
-
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error || "Failed to save")
-      }
-
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Failed to save") }
       const resData = await res.json()
-
-      // If creating and address fields are filled, attach the address
       if (!isEdit && addrLine1.trim()) {
         const newCustomerId = resData.customer.id
-        const addrRes = await fetch(
-          `/api/admin/customers/${newCustomerId}/addresses`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              label: addrLabel,
-              first_name: firstName,
-              last_name: lastName,
-              address_line1: addrLine1,
-              address_line2: addrLine2 || null,
-              city: addrCity,
-              state: addrState,
-              zip: addrZip,
-              country: addrCountry || "US",
-              phone: addrPhone || null,
-              is_default: true,
-            }),
-          }
-        )
-        if (!addrRes.ok) {
-          toast.warning("Customer created, but address failed to save")
-        }
+        const addrRes = await fetch(`/api/admin/customers/${newCustomerId}/addresses`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            label: addrLabel, first_name: firstName, last_name: lastName,
+            address_line1: addrLine1, address_line2: addrLine2 || null,
+            city: addrCity, state: addrState, zip: addrZip,
+            country: addrCountry || "US", phone: addrPhone || null, is_default: true,
+          }),
+        })
+        if (!addrRes.ok) toast.warning("Customer created, but address failed to save")
       }
-
       toast.success(isEdit ? "Customer updated" : "Customer created")
       await onSuccess()
       if (!isEdit) onOpenChange(false)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save")
-    } finally {
-      setSaving(false)
-    }
+    } finally { setSaving(false) }
   }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        className="flex w-full flex-col sm:max-w-lg"
-      >
+      <SheetContent side="right" className="flex w-full flex-col sm:max-w-lg">
         <SheetHeader>
           <SheetTitle>
-            {isEdit
-              ? `${customer.first_name} ${customer.last_name}`
-              : "New Customer"}
+            {isEdit ? `${customer.first_name} ${customer.last_name}` : "New Customer"}
           </SheetTitle>
           <SheetDescription>
-            {isEdit
-              ? "Edit customer details and manage addresses"
-              : "Create a new customer record"}
+            {isEdit ? "Edit customer details and manage addresses" : "Create a new customer record"}
           </SheetDescription>
         </SheetHeader>
-
         <div className="flex-1 overflow-y-auto">
           <div className="flex flex-col gap-6 px-4 pb-4">
             {/* ── Contact Info ───────────────────────────── */}
@@ -557,51 +539,25 @@ function CustomerSheet({
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name *</Label>
-                  <Input
-                    id="firstName"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="John"
-                  />
+                  <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="John" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last Name *</Label>
-                  <Input
-                    id="lastName"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    placeholder="Doe"
-                  />
+                  <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="john@example.com"
-                />
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@example.com" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="(555) 123-4567"
-                  />
+                  <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(555) 123-4567" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="company">Company</Label>
-                  <Input
-                    id="company"
-                    value={company}
-                    onChange={(e) => setCompany(e.target.value)}
-                    placeholder="Acme Inc."
-                  />
+                  <Input id="company" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Acme Inc." />
                 </div>
               </div>
             </div>
@@ -613,72 +569,27 @@ function CustomerSheet({
                 <Label>Social Media</Label>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={socialEntries.length >= SOCIAL_PLATFORMS.length}
-                    >
-                      <IconPlus className="mr-1 size-3" />
-                      Add
+                    <Button variant="outline" size="sm" disabled={socialEntries.length >= SOCIAL_PLATFORMS.length}>
+                      <IconPlus className="mr-1 size-3" />Add
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {SOCIAL_PLATFORMS.filter(
-                      (p) => !socialEntries.some((e) => e.key === p.key)
-                    ).map((p) => (
-                      <DropdownMenuItem
-                        key={p.key}
-                        onClick={() =>
-                          setSocialEntries((prev) => [
-                            ...prev,
-                            { key: p.key, value: "" },
-                          ])
-                        }
-                      >
+                    {SOCIAL_PLATFORMS.filter((p) => !socialEntries.some((e) => e.key === p.key)).map((p) => (
+                      <DropdownMenuItem key={p.key} onClick={() => setSocialEntries((prev) => [...prev, { key: p.key, value: "" }])}>
                         {p.label}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              {socialEntries.length === 0 && (
-                <p className="text-muted-foreground text-xs">
-                  No social accounts added
-                </p>
-              )}
+              {socialEntries.length === 0 && <p className="text-muted-foreground text-xs">No social accounts added</p>}
               {socialEntries.map((entry) => {
-                const platform = SOCIAL_PLATFORMS.find(
-                  (p) => p.key === entry.key
-                )!
+                const platform = SOCIAL_PLATFORMS.find((p) => p.key === entry.key)!
                 return (
                   <div key={entry.key} className="flex items-center gap-2">
-                    <span className="text-muted-foreground w-20 shrink-0 text-xs font-medium">
-                      {platform.label}
-                    </span>
-                    <Input
-                      value={entry.value}
-                      onChange={(e) =>
-                        setSocialEntries((prev) =>
-                          prev.map((s) =>
-                            s.key === entry.key
-                              ? { ...s, value: e.target.value }
-                              : s
-                          )
-                        )
-                      }
-                      placeholder={platform.placeholder}
-                      className="h-8"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground size-7 shrink-0"
-                      onClick={() =>
-                        setSocialEntries((prev) =>
-                          prev.filter((s) => s.key !== entry.key)
-                        )
-                      }
-                    >
+                    <span className="text-muted-foreground w-20 shrink-0 text-xs font-medium">{platform.label}</span>
+                    <Input value={entry.value} onChange={(e) => setSocialEntries((prev) => prev.map((s) => s.key === entry.key ? { ...s, value: e.target.value } : s))} placeholder={platform.placeholder} className="h-8" />
+                    <Button variant="ghost" size="icon" className="text-muted-foreground size-7 shrink-0" onClick={() => setSocialEntries((prev) => prev.filter((s) => s.key !== entry.key))}>
                       <IconX className="size-3" />
                     </Button>
                   </div>
@@ -693,17 +604,10 @@ function CustomerSheet({
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Status</Label>
-                    <p className="text-muted-foreground text-xs">
-                      Inactive customers cannot place orders
-                    </p>
+                    <p className="text-muted-foreground text-xs">Inactive customers cannot place orders</p>
                   </div>
-                  <Select
-                    value={isActive ? "active" : "inactive"}
-                    onValueChange={(v) => setIsActive(v === "active")}
-                  >
-                    <SelectTrigger className="w-[130px]">
-                      <SelectValue />
-                    </SelectTrigger>
+                  <Select value={isActive ? "active" : "inactive"} onValueChange={(v) => setIsActive(v === "active")}>
+                    <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="inactive">Inactive</SelectItem>
@@ -718,17 +622,10 @@ function CustomerSheet({
               <>
                 <Separator />
                 <div>
-                  <Label className="mb-3 block">
-                    Address{" "}
-                    <span className="text-muted-foreground text-xs">
-                      (optional)
-                    </span>
-                  </Label>
+                  <Label className="mb-3 block">Address <span className="text-muted-foreground text-xs">(optional)</span></Label>
                   <div className="space-y-3">
                     <Select value={addrLabel} onValueChange={setAddrLabel}>
-                      <SelectTrigger className="h-8">
-                        <SelectValue />
-                      </SelectTrigger>
+                      <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Home">Home</SelectItem>
                         <SelectItem value="Work">Work</SelectItem>
@@ -736,51 +633,16 @@ function CustomerSheet({
                         <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Input
-                      placeholder="Address line 1"
-                      value={addrLine1}
-                      onChange={(e) => setAddrLine1(e.target.value)}
-                      className="h-8"
-                    />
-                    <Input
-                      placeholder="Address line 2"
-                      value={addrLine2}
-                      onChange={(e) => setAddrLine2(e.target.value)}
-                      className="h-8"
-                    />
+                    <Input placeholder="Address line 1" value={addrLine1} onChange={(e) => setAddrLine1(e.target.value)} className="h-8" />
+                    <Input placeholder="Address line 2" value={addrLine2} onChange={(e) => setAddrLine2(e.target.value)} className="h-8" />
                     <div className="grid grid-cols-3 gap-2">
-                      <Input
-                        placeholder="City"
-                        value={addrCity}
-                        onChange={(e) => setAddrCity(e.target.value)}
-                        className="h-8"
-                      />
-                      <Input
-                        placeholder="State"
-                        value={addrState}
-                        onChange={(e) => setAddrState(e.target.value)}
-                        className="h-8"
-                      />
-                      <Input
-                        placeholder="ZIP"
-                        value={addrZip}
-                        onChange={(e) => setAddrZip(e.target.value)}
-                        className="h-8"
-                      />
+                      <Input placeholder="City" value={addrCity} onChange={(e) => setAddrCity(e.target.value)} className="h-8" />
+                      <Input placeholder="State" value={addrState} onChange={(e) => setAddrState(e.target.value)} className="h-8" />
+                      <Input placeholder="ZIP" value={addrZip} onChange={(e) => setAddrZip(e.target.value)} className="h-8" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <Input
-                        placeholder="Country"
-                        value={addrCountry}
-                        onChange={(e) => setAddrCountry(e.target.value)}
-                        className="h-8"
-                      />
-                      <Input
-                        placeholder="Phone"
-                        value={addrPhone}
-                        onChange={(e) => setAddrPhone(e.target.value)}
-                        className="h-8"
-                      />
+                      <Input placeholder="Country" value={addrCountry} onChange={(e) => setAddrCountry(e.target.value)} className="h-8" />
+                      <Input placeholder="Phone" value={addrPhone} onChange={(e) => setAddrPhone(e.target.value)} className="h-8" />
                     </div>
                   </div>
                 </div>
@@ -794,41 +656,19 @@ function CustomerSheet({
                 <div>
                   <div className="mb-3 flex items-center justify-between">
                     <Label>Saved Addresses</Label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setEditingAddress(null)
-                        setShowAddressForm(true)
-                      }}
-                    >
-                      <IconPlus className="mr-1 size-3" />
-                      Add
+                    <Button variant="outline" size="sm" onClick={() => { setEditingAddress(null); setShowAddressForm(true) }}>
+                      <IconPlus className="mr-1 size-3" />Add
                     </Button>
                   </div>
-                  {addresses.length === 0 && !showAddressForm && (
-                    <p className="text-muted-foreground text-sm">
-                      No saved addresses
-                    </p>
-                  )}
+                  {addresses.length === 0 && !showAddressForm && <p className="text-muted-foreground text-sm">No saved addresses</p>}
                   <div className="space-y-2">
                     {addresses.map((addr) => (
                       <AddressCard
-                        key={addr.id}
-                        address={addr}
-                        customerId={customer.id}
-                        onEdit={() => {
-                          setEditingAddress(addr)
-                          setShowAddressForm(true)
-                        }}
+                        key={addr.id} address={addr} customerId={customer.id}
+                        onEdit={() => { setEditingAddress(addr); setShowAddressForm(true) }}
                         onRefresh={async () => {
-                          const res = await fetch(
-                            `/api/admin/customers/${customer.id}/addresses`
-                          )
-                          if (res.ok) {
-                            const json = await res.json()
-                            setAddresses(json.addresses)
-                          }
+                          const res = await fetch(`/api/admin/customers/${customer.id}/addresses`)
+                          if (res.ok) { const json = await res.json(); setAddresses(json.addresses) }
                           await onSuccess()
                         }}
                       />
@@ -836,22 +676,12 @@ function CustomerSheet({
                   </div>
                   {showAddressForm && (
                     <AddressForm
-                      customerId={customer.id}
-                      address={editingAddress}
-                      onCancel={() => {
-                        setShowAddressForm(false)
-                        setEditingAddress(null)
-                      }}
+                      customerId={customer.id} address={editingAddress}
+                      onCancel={() => { setShowAddressForm(false); setEditingAddress(null) }}
                       onSaved={async () => {
-                        setShowAddressForm(false)
-                        setEditingAddress(null)
-                        const res = await fetch(
-                          `/api/admin/customers/${customer.id}/addresses`
-                        )
-                        if (res.ok) {
-                          const json = await res.json()
-                          setAddresses(json.addresses)
-                        }
+                        setShowAddressForm(false); setEditingAddress(null)
+                        const res = await fetch(`/api/admin/customers/${customer.id}/addresses`)
+                        if (res.ok) { const json = await res.json(); setAddresses(json.addresses) }
                         await onSuccess()
                       }}
                     />
@@ -864,13 +694,7 @@ function CustomerSheet({
             <Separator />
             <div className="space-y-2">
               <Label htmlFor="adminNotes">Admin Notes</Label>
-              <Textarea
-                id="adminNotes"
-                value={adminNotes}
-                onChange={(e) => setAdminNotes(e.target.value)}
-                placeholder="Internal notes about this customer..."
-                rows={3}
-              />
+              <Textarea id="adminNotes" value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} placeholder="Internal notes about this customer..." rows={3} />
             </div>
 
             {/* ── Summary (edit only) ────────────────────── */}
@@ -878,49 +702,19 @@ function CustomerSheet({
               <>
                 <Separator />
                 <div className="grid grid-cols-3 gap-3 text-center">
-                  <div>
-                    <p className="text-muted-foreground text-xs">Orders</p>
-                    <p className="text-lg font-semibold">
-                      {customer.total_orders}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">
-                      Total Spent
-                    </p>
-                    <p className="text-lg font-semibold">
-                      ${Number(customer.total_spent).toFixed(2)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Addresses</p>
-                    <p className="text-lg font-semibold">
-                      {addresses.length}
-                    </p>
-                  </div>
+                  <div><p className="text-muted-foreground text-xs">Orders</p><p className="text-lg font-semibold">{customer.total_orders}</p></div>
+                  <div><p className="text-muted-foreground text-xs">Total Spent</p><p className="text-lg font-semibold">${Number(customer.total_spent).toFixed(2)}</p></div>
+                  <div><p className="text-muted-foreground text-xs">Addresses</p><p className="text-lg font-semibold">{addresses.length}</p></div>
                 </div>
               </>
             )}
           </div>
         </div>
-
         <SheetFooter className="px-4 pb-4">
           <div className="flex w-full gap-2">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={saving}
-              className="flex-1"
-            >
-              {saving && (
-                <IconLoader2 className="mr-2 size-4 animate-spin" />
-              )}
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button onClick={handleSave} disabled={saving} className="flex-1">
+              {saving && <IconLoader2 className="mr-2 size-4 animate-spin" />}
               {isEdit ? "Save Changes" : "Create Customer"}
             </Button>
           </div>
@@ -934,76 +728,32 @@ function CustomerSheet({
 // Address Card
 // ---------------------------------------------------------------------------
 
-function AddressCard({
-  address,
-  customerId,
-  onEdit,
-  onRefresh,
-}: {
-  address: z.infer<typeof addressSchema>
-  customerId: string
-  onEdit: () => void
-  onRefresh: () => Promise<void>
+function AddressCard({ address, customerId, onEdit, onRefresh }: {
+  address: z.infer<typeof addressSchema>; customerId: string; onEdit: () => void; onRefresh: () => Promise<void>
 }) {
   const [deleting, setDeleting] = React.useState(false)
-
   const handleDelete = async () => {
     setDeleting(true)
     try {
-      const res = await fetch(
-        `/api/admin/customers/${customerId}/addresses/${address.id}`,
-        { method: "DELETE" }
-      )
+      const res = await fetch(`/api/admin/customers/${customerId}/addresses/${address.id}`, { method: "DELETE" })
       if (!res.ok) throw new Error("Failed to delete")
-      toast.success("Address deleted")
-      await onRefresh()
-    } catch {
-      toast.error("Failed to delete address")
-    } finally {
-      setDeleting(false)
-    }
+      toast.success("Address deleted"); await onRefresh()
+    } catch { toast.error("Failed to delete address") } finally { setDeleting(false) }
   }
-
   return (
     <div className="bg-muted/50 flex items-start justify-between rounded-lg border p-3">
       <div className="min-w-0 flex-1 space-y-0.5">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">{address.label}</span>
-          {address.is_default && (
-            <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
-              Default
-            </Badge>
-          )}
+          {address.is_default && <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">Default</Badge>}
         </div>
-        <p className="text-muted-foreground text-xs">
-          {address.first_name} {address.last_name}
-        </p>
-        <p className="text-muted-foreground text-xs">
-          {address.address_line1}
-          {address.address_line2 && `, ${address.address_line2}`}
-        </p>
-        <p className="text-muted-foreground text-xs">
-          {address.city}, {address.state} {address.zip}
-        </p>
+        <p className="text-muted-foreground text-xs">{address.first_name} {address.last_name}</p>
+        <p className="text-muted-foreground text-xs">{address.address_line1}{address.address_line2 && `, ${address.address_line2}`}</p>
+        <p className="text-muted-foreground text-xs">{address.city}, {address.state} {address.zip}</p>
       </div>
       <div className="flex gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-7"
-          onClick={onEdit}
-        >
-          <IconMapPin className="size-3" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-destructive size-7"
-          onClick={handleDelete}
-          disabled={deleting}
-        >
-          <IconTrash className="size-3" />
-        </Button>
+        <Button variant="ghost" size="icon" className="size-7" onClick={onEdit}><IconMapPin className="size-3" /></Button>
+        <Button variant="ghost" size="icon" className="text-destructive size-7" onClick={handleDelete} disabled={deleting}><IconTrash className="size-3" /></Button>
       </div>
     </div>
   )
@@ -1013,24 +763,13 @@ function AddressCard({
 // Address Form
 // ---------------------------------------------------------------------------
 
-function AddressForm({
-  customerId,
-  address,
-  onCancel,
-  onSaved,
-}: {
-  customerId: string
-  address: z.infer<typeof addressSchema> | null
-  onCancel: () => void
-  onSaved: () => Promise<void>
+function AddressForm({ customerId, address, onCancel, onSaved }: {
+  customerId: string; address: z.infer<typeof addressSchema> | null; onCancel: () => void; onSaved: () => Promise<void>
 }) {
   const isEdit = !!address
   const [saving, setSaving] = React.useState(false)
-
   const [label, setLabel] = React.useState(address?.label || "Home")
-  const [firstName, setFirstName] = React.useState(
-    address?.first_name || ""
-  )
+  const [firstName, setFirstName] = React.useState(address?.first_name || "")
   const [lastName, setLastName] = React.useState(address?.last_name || "")
   const [line1, setLine1] = React.useState(address?.address_line1 || "")
   const [line2, setLine2] = React.useState(address?.address_line2 || "")
@@ -1039,160 +778,57 @@ function AddressForm({
   const [zip, setZip] = React.useState(address?.zip || "")
   const [country, setCountry] = React.useState(address?.country || "US")
   const [addrPhone, setAddrPhone] = React.useState(address?.phone || "")
-  const [isDefault, setIsDefault] = React.useState(
-    address?.is_default || false
-  )
+  const [isDefault, setIsDefault] = React.useState(address?.is_default || false)
 
   const handleSaveAddress = async () => {
-    if (
-      !firstName.trim() ||
-      !lastName.trim() ||
-      !line1.trim() ||
-      !city.trim() ||
-      !state.trim() ||
-      !zip.trim()
-    ) {
-      toast.error("Please fill in all required address fields")
-      return
+    if (!firstName.trim() || !lastName.trim() || !line1.trim() || !city.trim() || !state.trim() || !zip.trim()) {
+      toast.error("Please fill in all required address fields"); return
     }
-
     setSaving(true)
     try {
-      const payload = {
-        label,
-        first_name: firstName,
-        last_name: lastName,
-        address_line1: line1,
-        address_line2: line2 || null,
-        city,
-        state,
-        zip,
-        country,
-        phone: addrPhone || null,
-        is_default: isDefault,
-      }
-
-      const url = isEdit
-        ? `/api/admin/customers/${customerId}/addresses/${address.id}`
-        : `/api/admin/customers/${customerId}/addresses`
-
-      const res = await fetch(url, {
-        method: isEdit ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error || "Failed to save address")
-      }
-
-      toast.success(isEdit ? "Address updated" : "Address added")
-      await onSaved()
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to save address"
-      )
-    } finally {
-      setSaving(false)
-    }
+      const payload = { label, first_name: firstName, last_name: lastName, address_line1: line1, address_line2: line2 || null, city, state, zip, country, phone: addrPhone || null, is_default: isDefault }
+      const url = isEdit ? `/api/admin/customers/${customerId}/addresses/${address.id}` : `/api/admin/customers/${customerId}/addresses`
+      const res = await fetch(url, { method: isEdit ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Failed to save address") }
+      toast.success(isEdit ? "Address updated" : "Address added"); await onSaved()
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Failed to save address") } finally { setSaving(false) }
   }
 
   return (
     <div className="mt-3 space-y-3 rounded-lg border p-3">
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium">
-          {isEdit ? "Edit Address" : "New Address"}
-        </Label>
+        <Label className="text-sm font-medium">{isEdit ? "Edit Address" : "New Address"}</Label>
         <div className="flex items-center gap-2">
-          <Checkbox
-            id="isDefault"
-            checked={isDefault}
-            onCheckedChange={(v) => setIsDefault(!!v)}
-          />
-          <Label htmlFor="isDefault" className="text-xs">
-            Default
-          </Label>
+          <Checkbox id="isDefault" checked={isDefault} onCheckedChange={(v) => setIsDefault(!!v)} />
+          <Label htmlFor="isDefault" className="text-xs">Default</Label>
         </div>
       </div>
       <Select value={label} onValueChange={setLabel}>
-        <SelectTrigger className="h-8">
-          <SelectValue />
-        </SelectTrigger>
+        <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
         <SelectContent>
-          <SelectItem value="Home">Home</SelectItem>
-          <SelectItem value="Work">Work</SelectItem>
-          <SelectItem value="Billing">Billing</SelectItem>
-          <SelectItem value="Other">Other</SelectItem>
+          <SelectItem value="Home">Home</SelectItem><SelectItem value="Work">Work</SelectItem>
+          <SelectItem value="Billing">Billing</SelectItem><SelectItem value="Other">Other</SelectItem>
         </SelectContent>
       </Select>
       <div className="grid grid-cols-2 gap-2">
-        <Input
-          placeholder="First name *"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          className="h-8"
-        />
-        <Input
-          placeholder="Last name *"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          className="h-8"
-        />
+        <Input placeholder="First name *" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-8" />
+        <Input placeholder="Last name *" value={lastName} onChange={(e) => setLastName(e.target.value)} className="h-8" />
       </div>
-      <Input
-        placeholder="Address line 1 *"
-        value={line1}
-        onChange={(e) => setLine1(e.target.value)}
-        className="h-8"
-      />
-      <Input
-        placeholder="Address line 2"
-        value={line2}
-        onChange={(e) => setLine2(e.target.value)}
-        className="h-8"
-      />
+      <Input placeholder="Address line 1 *" value={line1} onChange={(e) => setLine1(e.target.value)} className="h-8" />
+      <Input placeholder="Address line 2" value={line2} onChange={(e) => setLine2(e.target.value)} className="h-8" />
       <div className="grid grid-cols-3 gap-2">
-        <Input
-          placeholder="City *"
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          className="h-8"
-        />
-        <Input
-          placeholder="State *"
-          value={state}
-          onChange={(e) => setState(e.target.value)}
-          className="h-8"
-        />
-        <Input
-          placeholder="ZIP *"
-          value={zip}
-          onChange={(e) => setZip(e.target.value)}
-          className="h-8"
-        />
+        <Input placeholder="City *" value={city} onChange={(e) => setCity(e.target.value)} className="h-8" />
+        <Input placeholder="State *" value={state} onChange={(e) => setState(e.target.value)} className="h-8" />
+        <Input placeholder="ZIP *" value={zip} onChange={(e) => setZip(e.target.value)} className="h-8" />
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Input
-          placeholder="Country"
-          value={country}
-          onChange={(e) => setCountry(e.target.value)}
-          className="h-8"
-        />
-        <Input
-          placeholder="Phone"
-          value={addrPhone}
-          onChange={(e) => setAddrPhone(e.target.value)}
-          className="h-8"
-        />
+        <Input placeholder="Country" value={country} onChange={(e) => setCountry(e.target.value)} className="h-8" />
+        <Input placeholder="Phone" value={addrPhone} onChange={(e) => setAddrPhone(e.target.value)} className="h-8" />
       </div>
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={onCancel}>
-          Cancel
-        </Button>
+        <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
         <Button size="sm" onClick={handleSaveAddress} disabled={saving}>
-          {saving && <IconLoader2 className="mr-1 size-3 animate-spin" />}
-          {isEdit ? "Update" : "Add Address"}
+          {saving && <IconLoader2 className="mr-1 size-3 animate-spin" />}{isEdit ? "Update" : "Add Address"}
         </Button>
       </div>
     </div>
@@ -1206,274 +842,132 @@ function AddressForm({
 export function CustomersDataTable({
   data,
   onRefresh,
+  loading = false,
 }: {
   data: Customer[]
   onRefresh: () => Promise<void>
+  loading?: boolean
 }) {
-  // Sheet state
   const [sheetOpen, setSheetOpen] = React.useState(false)
-  const [editingCustomer, setEditingCustomer] =
-    React.useState<Customer | null>(null)
+  const [editingCustomer, setEditingCustomer] = React.useState<Customer | null>(null)
   const [searchExpanded, setSearchExpanded] = React.useState(false)
   const isMobile = useIsMobile()
   const searchInputRef = React.useRef<HTMLInputElement>(null)
 
-  // Table state
   const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] =
-    React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({
-      phone: !isMobile,
-      company: !isMobile,
-      total_spent: !isMobile,
-    })
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
+    phone: !isMobile, company: !isMobile, total_spent: !isMobile,
+  })
   const [rowSelection, setRowSelection] = React.useState({})
   const [globalFilter, setGlobalFilter] = React.useState("")
+  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
-  // Update visibility when mobile changes
   React.useEffect(() => {
-    setColumnVisibility((prev) => ({
-      ...prev,
-      phone: !isMobile,
-      company: !isMobile,
-      total_spent: !isMobile,
-    }))
+    setColumnVisibility((prev) => ({ ...prev, phone: !isMobile, company: !isMobile, total_spent: !isMobile }))
   }, [isMobile])
 
+  // Derive visible skeleton columns from columnVisibility so skeleton cell
+  // count always matches the rendered header count (critical on mobile).
+  const visibleSkeletonColumns = React.useMemo<SkeletonColumn[]>(() => {
+    return SKELETON_MAP
+      .filter(({ id }) => {
+        if (id === "select" || id === "actions" || id === "name") return true
+        return columnVisibility[id] !== false
+      })
+      .map(({ skeleton }) => skeleton)
+  }, [columnVisibility])
+
   const columns = React.useMemo(
-    () =>
-      getColumns(
-        (customer) => {
-          setEditingCustomer(customer)
-          setSheetOpen(true)
-        },
-        onRefresh
-      ),
+    () => getColumns((customer) => { setEditingCustomer(customer); setSheetOpen(true) }, onRefresh),
     [onRefresh]
   )
 
   const table = useReactTable({
-    data,
-    columns,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-      globalFilter,
-    },
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    onGlobalFilterChange: setGlobalFilter,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    data, columns,
+    state: { sorting, columnFilters, columnVisibility, rowSelection, globalFilter, pagination },
+    onSortingChange: setSorting, onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility, onRowSelectionChange: setRowSelection,
+    onGlobalFilterChange: setGlobalFilter, onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(), getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(), getSortedRowModel: getSortedRowModel(),
     globalFilterFn: (row, _columnId, filterValue) => {
       const search = filterValue.toLowerCase()
       const c = row.original
-      return (
-        c.first_name.toLowerCase().includes(search) ||
-        c.last_name.toLowerCase().includes(search) ||
-        c.email.toLowerCase().includes(search) ||
-        (c.phone?.toLowerCase().includes(search) ?? false) ||
+      return c.first_name.toLowerCase().includes(search) || c.last_name.toLowerCase().includes(search) ||
+        c.email.toLowerCase().includes(search) || (c.phone?.toLowerCase().includes(search) ?? false) ||
         (c.company?.toLowerCase().includes(search) ?? false)
-      )
     },
   })
 
-  // Bulk delete
   const handleBulkDelete = async () => {
-    const selectedIds = table
-      .getFilteredSelectedRowModel()
-      .rows.map((r) => r.original.id)
-
+    const selectedIds = table.getFilteredSelectedRowModel().rows.map((r) => r.original.id)
     if (selectedIds.length === 0) return
-
     try {
-      const res = await fetch("/api/admin/customers", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: selectedIds }),
-      })
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error || "Failed to delete")
-      }
-      toast.success(`Deleted ${selectedIds.length} customer(s)`)
-      setRowSelection({})
-      await onRefresh()
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete")
-    }
+      const res = await fetch("/api/admin/customers", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: selectedIds }) })
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Failed to delete") }
+      toast.success(`Deleted ${selectedIds.length} customer(s)`); setRowSelection({}); await onRefresh()
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Failed to delete") }
   }
 
-  // Expand search on mobile
-  React.useEffect(() => {
-    if (searchExpanded && searchInputRef.current) {
-      searchInputRef.current.focus()
-    }
-  }, [searchExpanded])
-
-  // Keep editingCustomer in sync with refreshed data
-  React.useEffect(() => {
-    if (editingCustomer) {
-      const updated = data.find((c) => c.id === editingCustomer.id)
-      if (updated) setEditingCustomer(updated)
-    }
-  }, [data]) // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => { if (searchExpanded && searchInputRef.current) searchInputRef.current.focus() }, [searchExpanded])
+  React.useEffect(() => { if (editingCustomer) { const updated = data.find((c) => c.id === editingCustomer.id); if (updated) setEditingCustomer(updated) } }, [data]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Tabs defaultValue="all" className="w-full flex-col gap-4">
       {/* ── Toolbar ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 lg:px-6">
-        {/* Left: Tab selector */}
         {!(isMobile && searchExpanded) && (
           <>
-            <Label htmlFor="view-selector" className="sr-only">
-              View
-            </Label>
+            <Label htmlFor="view-selector" className="sr-only">View</Label>
             <Select defaultValue="all">
-              <SelectTrigger
-                className="flex w-fit @4xl/main:hidden"
-                size="sm"
-                id="view-selector"
-              >
-                <SelectValue placeholder="Select a view" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Customers</SelectItem>
-              </SelectContent>
+              <SelectTrigger className="flex w-fit @4xl/main:hidden" size="sm" id="view-selector"><SelectValue placeholder="Select a view" /></SelectTrigger>
+              <SelectContent><SelectItem value="all">All Customers</SelectItem></SelectContent>
             </Select>
             <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
-              <TabsTrigger value="all">
-                All Customers{" "}
-                <Badge variant="secondary">{data.length}</Badge>
-              </TabsTrigger>
+              <TabsTrigger value="all">All Customers <Badge variant="secondary">{loading ? "—" : data.length}</Badge></TabsTrigger>
             </TabsList>
           </>
         )}
 
-        {/* Right: Actions — or expanded search on mobile */}
         {isMobile && searchExpanded ? (
           <div className="flex w-full items-center gap-2">
             <div className="relative flex-1">
               <IconSearch className="text-muted-foreground absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2" />
-              <Input
-                ref={searchInputRef}
-                placeholder="Search customers..."
-                value={globalFilter}
-                onChange={(e) => setGlobalFilter(e.target.value)}
-                className="h-8 w-full pl-8"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") {
-                    setSearchExpanded(false)
-                    setGlobalFilter("")
-                  }
-                }}
-              />
+              <Input ref={searchInputRef} placeholder="Search customers..." value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} className="h-8 w-full pl-8" autoFocus disabled={loading} onKeyDown={(e) => { if (e.key === "Escape") { setSearchExpanded(false); setGlobalFilter("") } }} />
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setSearchExpanded(false)
-                setGlobalFilter("")
-              }}
-            >
-              <IconX className="size-4" />
-            </Button>
+            <Button variant="ghost" size="sm" onClick={() => { setSearchExpanded(false); setGlobalFilter("") }}><IconX className="size-4" /></Button>
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            {/* Search — icon on mobile, input on desktop */}
             {isMobile ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSearchExpanded(true)}
-              >
-                <IconSearch className="size-4" />
-              </Button>
+              <Button variant="outline" size="sm" onClick={() => setSearchExpanded(true)} disabled={loading}><IconSearch className="size-4" /></Button>
             ) : (
               <div className="relative">
                 <IconSearch className="text-muted-foreground absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2" />
-                <Input
-                  placeholder="Search customers..."
-                  value={globalFilter}
-                  onChange={(e) => setGlobalFilter(e.target.value)}
-                  className="h-8 w-44 pl-8"
-                />
+                <Input placeholder="Search customers..." value={globalFilter} onChange={(e) => setGlobalFilter(e.target.value)} className="h-8 w-44 pl-8" disabled={loading} />
               </div>
             )}
-
-            {/* Status filter */}
-            <Select
-              defaultValue="all"
-              onValueChange={(v) =>
-                table.getColumn("is_active")?.setFilterValue(v)
-              }
-            >
-              <SelectTrigger className="h-8 w-auto sm:w-[130px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
+            <Select defaultValue="all" onValueChange={(v) => table.getColumn("is_active")?.setFilterValue(v)} disabled={loading}>
+              <SelectTrigger className="h-8 w-auto sm:w-[130px]"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="all">All</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
             </Select>
-
-            {/* Column visibility */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <IconLayoutColumns className="size-4" />
-                  <span className="ml-1 hidden lg:inline">Columns</span>
-                </Button>
+                <Button variant="outline" size="sm"><IconLayoutColumns className="size-4" /><span className="ml-1 hidden lg:inline">Columns</span></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                {table
-                  .getAllColumns()
-                  .filter(
-                    (column) =>
-                      typeof column.accessorFn !== "undefined" &&
-                      column.getCanHide()
-                  )
-                  .map((column) => (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id === "is_active"
-                        ? "Status"
-                        : column.id === "name"
-                          ? "Customer"
-                          : column.id}
-                    </DropdownMenuCheckboxItem>
-                  ))}
+                {table.getAllColumns().filter((column) => typeof column.accessorFn !== "undefined" && column.getCanHide()).map((column) => (
+                  <DropdownMenuCheckboxItem key={column.id} className="capitalize" checked={column.getIsVisible()} onCheckedChange={(value) => column.toggleVisibility(!!value)}>
+                    {column.id === "is_active" ? "Status" : column.id === "name" ? "Customer" : column.id}
+                  </DropdownMenuCheckboxItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
-
-            {/* Add button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setEditingCustomer(null)
-                setSheetOpen(true)
-              }}
-            >
-              <IconPlus className="size-4" />
-              <span className="ml-1 hidden lg:inline">Add Customer</span>
+            <Button variant="outline" size="sm" onClick={() => { setEditingCustomer(null); setSheetOpen(true) }} disabled={loading}>
+              <IconPlus className="size-4" /><span className="ml-1 hidden lg:inline">Add Customer</span>
             </Button>
           </div>
         )}
@@ -1482,69 +976,49 @@ export function CustomersDataTable({
       {/* ── Bulk Actions Bar ─────────────────────────────── */}
       {table.getFilteredSelectedRowModel().rows.length > 0 && (
         <div className="flex items-center gap-2 px-4 lg:px-6">
-          <span className="text-muted-foreground text-sm">
-            {table.getFilteredSelectedRowModel().rows.length} selected
-          </span>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleBulkDelete}
-          >
-            <IconTrash className="mr-1 size-3" />
-            Delete
-          </Button>
+          <span className="text-muted-foreground text-sm">{table.getFilteredSelectedRowModel().rows.length} selected</span>
+          <Button variant="destructive" size="sm" onClick={handleBulkDelete}><IconTrash className="mr-1 size-3" />Delete</Button>
         </div>
       )}
 
       {/* ── Table ─────────────────────────────────────────── */}
-      <TabsContent
-        value="all"
-        className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
-      >
+      <TabsContent value="all" className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
         <div className="overflow-hidden rounded-lg border">
-          <Table>
-            <TableHeader className="bg-muted sticky top-0">
+          <Table className="table-fixed">
+            <TableHeader className="bg-muted sticky top-0 z-10">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                    <TableHead
+                      key={header.id}
+                      colSpan={header.colSpan}
+                      style={
+                        (header.column.columnDef.meta as { flexible?: boolean })?.flexible
+                          ? undefined
+                          : { width: header.column.getSize() }
+                      }
+                    >
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHead>
                   ))}
                 </TableRow>
               ))}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows?.length ? (
+              {loading ? (
+                <TableSkeleton columns={visibleSkeletonColumns} rows={table.getState().pagination.pageSize} />
+              ) : table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
+                  <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
+                      <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    {globalFilter
-                      ? "No customers match your search."
-                      : "No customers yet."}
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                    {globalFilter ? "No customers match your search." : "No customers yet."}
                   </TableCell>
                 </TableRow>
               )}
@@ -1555,37 +1029,16 @@ export function CustomersDataTable({
         {/* ── Pagination ─────────────────────────────── */}
         <div className="flex items-center justify-between">
           <div className="text-muted-foreground text-sm">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
+            {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s) selected.
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next
-            </Button>
+            <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Previous</Button>
+            <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Next</Button>
           </div>
         </div>
       </TabsContent>
 
-      {/* ── Sheet (right side) ────────────────────────────── */}
-      <CustomerSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        customer={editingCustomer}
-        onSuccess={onRefresh}
-      />
+      <CustomerSheet open={sheetOpen} onOpenChange={setSheetOpen} customer={editingCustomer} onSuccess={onRefresh} />
     </Tabs>
   )
 }

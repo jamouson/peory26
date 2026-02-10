@@ -1,14 +1,13 @@
 // =============================================================================
 // File: src/app/(dashboard)/dashboard/products/page.tsx
-// Description: Admin product list page. Same pattern as variations/page.tsx —
-//   fetches data, passes it to the ProductsDataTable component which handles
-//   all table logic (TanStack React Table, DnD, pagination, filtering, etc).
+// Description: Admin product list page. Always renders the DataTable shell
+//   immediately — skeleton rows display while data loads for perceived
+//   instant loading (no more full-page spinner).
 // =============================================================================
 
 "use client"
 
 import * as React from "react"
-import { IconLoader2 } from "@tabler/icons-react"
 
 import { ProductsDataTable } from "@/components/products-data-table"
 
@@ -18,7 +17,7 @@ export default function ProductsPage() {
 
   const fetchData = React.useCallback(async () => {
     try {
-      // Fetch all products (high limit) — TanStack handles client-side 
+      setLoading(true)
       const res = await fetch("/api/admin/products?limit=500&sort=created_at&order=desc")
       if (!res.ok) throw new Error("Failed to fetch")
       const json = await res.json()
@@ -34,17 +33,9 @@ export default function ProductsPage() {
     fetchData()
   }, [fetchData])
 
-  if (loading) {
-    return (
-      <div className="flex flex-1 items-center justify-center py-20">
-        <IconLoader2 className="text-muted-foreground size-8 animate-spin" />
-      </div>
-    )
-  }
-
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-      <ProductsDataTable data={data} onRefresh={fetchData} />
+      <ProductsDataTable data={data} onRefresh={fetchData} loading={loading} />
     </div>
   )
 }

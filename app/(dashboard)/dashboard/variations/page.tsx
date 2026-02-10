@@ -1,13 +1,13 @@
 // =============================================================================
 // File: src/app/(dashboard)/dashboard/variations/page.tsx
-// Description: Variations management page. Same pattern as dashboard/page.tsx —
-//   fetches data, passes it to the VariationsDataTable component.
+// Description: Variations management page. Always renders the DataTable shell
+//   immediately — skeleton rows display while data loads for perceived
+//   instant loading (no more full-page spinner).
 // =============================================================================
 
 "use client"
 
 import * as React from "react"
-import { IconLoader2 } from "@tabler/icons-react"
 
 import { VariationsDataTable } from "@/components/variations-data-table"
 
@@ -17,6 +17,7 @@ export default function VariationsPage() {
 
   const fetchData = React.useCallback(async () => {
     try {
+      setLoading(true)
       const res = await fetch("/api/admin/variations")
       if (!res.ok) throw new Error("Failed to fetch")
       const json = await res.json()
@@ -32,17 +33,9 @@ export default function VariationsPage() {
     fetchData()
   }, [fetchData])
 
-  if (loading) {
-    return (
-      <div className="flex flex-1 items-center justify-center py-20">
-        <IconLoader2 className="text-muted-foreground size-8 animate-spin" />
-      </div>
-    )
-  }
-
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-      <VariationsDataTable data={data} onRefresh={fetchData} />
+      <VariationsDataTable data={data} onRefresh={fetchData} loading={loading} />
     </div>
   )
 }

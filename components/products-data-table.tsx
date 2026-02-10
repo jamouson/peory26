@@ -4,6 +4,8 @@
 //   components/variations-data-table.tsx — DnD rows, TanStack React Table,
 //   Tabs wrapper, pagination, column visibility. Product-specific columns,
 //   actions menu, and drawer (reuses ProductDrawer + ProductStatusBadge).
+//   UPDATED: Dynamic skeleton columns via SKELETON_MAP that respect column
+//   visibility for zero-jump loading. Matches customers-data-table pattern.
 // =============================================================================
 
 "use client"
@@ -36,10 +38,8 @@ import {
   IconChevronsLeft,
   IconChevronsRight,
   IconDotsVertical,
-  IconEye,
   IconGripVertical,
   IconLayoutColumns,
-  IconLoader2,
   IconPlus,
   IconRocket,
   IconSearch,
@@ -102,6 +102,10 @@ import {
 } from "@/components/ui/tabs"
 import { ProductDrawer } from "@/components/admin/product-drawer"
 import { ProductStatusBadge } from "@/components/admin/product-status-badge"
+import {
+  TableSkeleton,
+  type SkeletonColumn,
+} from "@/components/ui/table-skeleton"
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -134,6 +138,24 @@ export const schema = z.object({
 })
 
 type Product = z.infer<typeof schema>
+
+// ---------------------------------------------------------------------------
+// Skeleton column config map — keyed by column id so we can derive visible
+// skeleton columns dynamically based on columnVisibility state. This ensures
+// the skeleton cell count always matches the rendered header count.
+// ---------------------------------------------------------------------------
+
+const SKELETON_MAP: { id: string; skeleton: SkeletonColumn }[] = [
+  { id: "drag", skeleton: { width: "w-4", variant: "text", align: "center" } },
+  { id: "select", skeleton: { width: "w-4", variant: "checkbox", align: "center" } },
+  { id: "name", skeleton: { width: "w-28", variant: "image-text", secondLine: "w-16" } },
+  { id: "status", skeleton: { width: "w-16", variant: "badge" } },
+  { id: "price", skeleton: { width: "w-14", align: "right" } },
+  { id: "inventory", skeleton: { width: "w-10", align: "right" } },
+  { id: "variants", skeleton: { width: "w-8", align: "right" } },
+  { id: "created_at", skeleton: { width: "w-16" } },
+  { id: "actions", skeleton: { width: "w-6", align: "center" } },
+]
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -192,6 +214,7 @@ function getColumns(
       id: "drag",
       header: () => null,
       cell: ({ row }) => <DragHandle id={row.original.id} />,
+      size: 40,
     },
     {
       id: "select",
@@ -220,6 +243,7 @@ function getColumns(
       ),
       enableSorting: false,
       enableHiding: false,
+      size: 40,
     },
     {
       accessorKey: "name",
@@ -254,6 +278,7 @@ function getColumns(
         )
       },
       enableHiding: false,
+      meta: { flexible: true },
     },
     {
       accessorKey: "status",
@@ -278,6 +303,7 @@ function getColumns(
         if (!filterValue || filterValue === "all") return true
         return row.original.status === filterValue
       },
+      size: 110,
     },
     {
       id: "price",
@@ -287,6 +313,7 @@ function getColumns(
           {getPriceRange(row.original)}
         </div>
       ),
+      size: 120,
     },
     {
       id: "inventory",
@@ -314,6 +341,7 @@ function getColumns(
           </div>
         )
       },
+      size: 90,
     },
     {
       id: "variants",
@@ -323,6 +351,7 @@ function getColumns(
           {row.original.product_variants.length}
         </div>
       ),
+      size: 80,
     },
     {
       accessorKey: "created_at",
@@ -332,6 +361,7 @@ function getColumns(
           {new Date(row.original.created_at).toLocaleDateString()}
         </div>
       ),
+      size: 100,
     },
     {
       id: "actions",
@@ -342,6 +372,7 @@ function getColumns(
           onRefresh={onRefresh}
         />
       ),
+      size: 50,
     },
   ]
 }
@@ -494,9 +525,11 @@ function BulkActionsBar({
 export function ProductsDataTable({
   data: initialData,
   onRefresh,
+  loading = false,
 }: {
   data: Product[]
   onRefresh: () => Promise<void>
+  loading?: boolean
 }) {
   const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
@@ -550,6 +583,18 @@ export function ProductsDataTable({
       })
     }
   }, [statusFilter])
+
+  // Derive visible skeleton columns from columnVisibility so skeleton cell
+  // count always matches the rendered header count (critical on mobile).
+  const visibleSkeletonColumns = React.useMemo<SkeletonColumn[]>(() => {
+    return SKELETON_MAP
+      .filter(({ id }) => {
+        // Always-visible columns (non-hideable)
+        if (id === "drag" || id === "select" || id === "actions" || id === "name") return true
+        return columnVisibility[id] !== false
+      })
+      .map(({ skeleton }) => skeleton)
+  }, [columnVisibility])
 
   const columns = React.useMemo(
     () => getColumns(openDrawer, onRefresh),
@@ -681,7 +726,10 @@ export function ProductsDataTable({
             </Select>
             <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
               <TabsTrigger value="outline">
-                All Products <Badge variant="secondary">{data.length}</Badge>
+                All Products{" "}
+                <Badge variant="secondary">
+                  {loading ? "—" : data.length}
+                </Badge>
               </TabsTrigger>
             </TabsList>
           </>
@@ -700,6 +748,7 @@ export function ProductsDataTable({
                 onChange={(e) => setGlobalFilter(e.target.value)}
                 className="h-8 w-full pl-8"
                 autoFocus
+                disabled={loading}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") {
                     setSearchExpanded(false)
@@ -728,6 +777,7 @@ export function ProductsDataTable({
               size="icon"
               className="size-8 lg:hidden"
               onClick={() => setSearchExpanded(true)}
+              disabled={loading}
             >
               <IconSearch className="size-3.5" />
               <span className="sr-only">Search</span>
@@ -739,10 +789,15 @@ export function ProductsDataTable({
                 value={globalFilter}
                 onChange={(e) => setGlobalFilter(e.target.value)}
                 className="h-8 w-44 pl-8"
+                disabled={loading}
               />
             </div>
             {/* Status filter — compact on mobile */}
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select
+              value={statusFilter}
+              onValueChange={setStatusFilter}
+              disabled={loading}
+            >
               <SelectTrigger size="sm" className="w-auto lg:w-[130px]">
                 <SelectValue />
               </SelectTrigger>
@@ -787,7 +842,12 @@ export function ProductsDataTable({
               </DropdownMenuContent>
             </DropdownMenu>
             {/* Add product */}
-            <Button variant="default" size="sm" onClick={() => openDrawer(null)}>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => openDrawer(null)}
+              disabled={loading}
+            >
               <IconPlus />
               <span className="hidden lg:inline">Add Product</span>
             </Button>
@@ -819,12 +879,20 @@ export function ProductsDataTable({
             sensors={sensors}
             id={sortableId}
           >
-            <Table>
+            <Table className="table-fixed">
               <TableHeader className="bg-muted sticky top-0 z-10">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id} colSpan={header.colSpan}>
+                      <TableHead
+                        key={header.id}
+                        colSpan={header.colSpan}
+                        style={
+                          (header.column.columnDef.meta as { flexible?: boolean })?.flexible
+                            ? undefined
+                            : { width: header.column.getSize() }
+                        }
+                      >
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -837,7 +905,12 @@ export function ProductsDataTable({
                 ))}
               </TableHeader>
               <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getRowModel().rows?.length ? (
+                {loading ? (
+                  <TableSkeleton
+                    columns={visibleSkeletonColumns}
+                    rows={table.getState().pagination.pageSize}
+                  />
+                ) : table.getRowModel().rows?.length ? (
                   <SortableContext
                     items={dataIds}
                     strategy={verticalListSortingStrategy}
