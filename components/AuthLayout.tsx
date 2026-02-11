@@ -25,7 +25,9 @@ export function AuthLayout({
       {/* Mobile Logo */}
       {showLogo && (
         <div className="absolute left-4 top-4 z-20 flex h-10 items-center md:left-8 md:top-8 lg:hidden">
-          <DatabaseLogo className="w-32 text-foreground" />
+          <Link href="/" aria-label="Home">
+            <DatabaseLogo className="w-32 text-foreground" />
+          </Link>
         </div>
       )}
 
@@ -42,7 +44,9 @@ export function AuthLayout({
         <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
           <div className="absolute inset-0 bg-zinc-900" />
           <div className="relative z-20 flex items-center text-lg font-medium">
-            <DatabaseLogo className="w-32 text-white" />
+            <Link href="/" aria-label="Home">
+              <DatabaseLogo className="w-32 text-white" />
+            </Link>
           </div>
           <div className="relative z-20 mt-auto">{sidebarContent}</div>
         </div>
