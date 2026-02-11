@@ -113,7 +113,7 @@ export function Navigation() {
           {/* Logo */}
           <Link href="/" aria-label="Home">
             <span className="sr-only">Company logo</span>
-            <DatabaseLogo className="w-28" />
+            <DatabaseLogo className="w-40" />
           </Link>
 
           {/* Desktop nav links */}
