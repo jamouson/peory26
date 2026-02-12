@@ -1,17 +1,13 @@
 // =============================================================================
-// File: app/api/reviews/testimonials/route.ts
+// File: src/app/api/reviews/testimonials/route.ts
 // Description: Public endpoint — returns approved reviews for the testimonial
-//   carousel on auth pages. Sorted newest-first. No auth required since
-//   the RLS policy already allows public SELECT on approved reviews.
+//   carousel on auth pages and cakes page. Sorted newest-first. No auth
+//   required since the RLS policy already allows public SELECT on approved
+//   reviews.
 // =============================================================================
 
-import { createClient } from "@supabase/supabase-js"
+import { supabase } from "@/lib/supabase"
 import { NextResponse } from "next/server"
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 export async function GET() {
   try {

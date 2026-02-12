@@ -1,12 +1,10 @@
-// =============================================================================
-// File: src/app/(landing)/cakes/page.tsx
-// Description: Cakes landing page with hero, collections, flavors, and CTA.
-// =============================================================================
+// src/app/(landing)/cakes/page.tsx
 
 import type { Metadata } from "next"
 import { CakesHero } from "./cakes-hero"
 import { CakeCollections } from "./cake-collections"
 import { CakeFlavors } from "./cake-flavors"
+import { CustomerReviews } from "./customer-reviews"
 import Cta from "@/components/ui/Cta"
 
 export const metadata: Metadata = {
@@ -21,6 +19,7 @@ export default function CakesPage() {
       <CakesHero />
       <CakeCollections />
       <CakeFlavors />
+      <CustomerReviews />
       <Cta />
     </>
   )

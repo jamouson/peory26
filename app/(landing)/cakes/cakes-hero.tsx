@@ -239,7 +239,7 @@ export function CakesHero() {
               className="gap-2 rounded-full border-foreground/10 bg-background/80 px-4 py-1.5 text-sm font-medium backdrop-blur-sm"
             >
               <Sparkles className="h-3.5 w-3.5 text-rose-500" />
-              <span>Now accepting orders for Spring 2025</span>
+              <span>Now accepting orders for 2026</span>
               <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
             </Badge>
           </div>
