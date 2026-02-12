@@ -1,0 +1,308 @@
+// Prisma Schema for PEORY E-Commerce
+// Migrated from Supabase PostgreSQL to Neon
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DATABASE_URL_UNPOOLED")
+  extensions = [pgcrypto]
+}
+
+// ============================================
+// CORE TABLES
+// ============================================
+
+model Product {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String
+  slug                  String   @unique
+  description           String?
+  basePrice             Decimal  @map("base_price") @db.Decimal(10, 2)
+  compareAtPrice        Decimal? @map("compare_at_price") @db.Decimal(10, 2)
+  images                String[] @default([])
+  status                String   @default("draft")
+  scheduledPublishDate  DateTime? @map("scheduled_publish_date") @db.Timestamptz
+  publishedAt           DateTime? @map("published_at") @db.Timestamptz
+  metaTitle             String?  @map("meta_title")
+  metaDescription       String?  @map("meta_description")
+  requiresShipping      Boolean  @default(true) @map("requires_shipping")
+  isFeatured            Boolean  @default(false) @map("is_featured")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  createdBy             String?  @map("created_by") @db.Uuid
+  updatedBy             String?  @map("updated_by") @db.Uuid
+
+  // Relations
+  variants   ProductVariant[]
+  orderItems OrderItem[]
+
+  @@index([status], map: "idx_products_status")
+  @@index([status, scheduledPublishDate], map: "idx_products_scheduled")
+  @@index([status, publishedAt], map: "idx_products_published")
+  @@map("products")
+}
+
+model ProductVariant {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId      String   @map("product_id") @db.Uuid
+  sku            String   @unique
+  price          Decimal  @db.Decimal(10, 2)
+  compareAtPrice Decimal? @map("compare_at_price") @db.Decimal(10, 2)
+  inventoryCount Int      @default(0) @map("inventory_count")
+  trackInventory Boolean  @default(true) @map("track_inventory")
+  allowBackorder Boolean  @default(false) @map("allow_backorder")
+  imageUrl       String?  @map("image_url")
+  weightGrams    Int?     @map("weight_grams")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  product      Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  options      ProductVariantOption[]
+  cartItems    CartItem[]
+  reservations InventoryReservation[]
+  orderItems   OrderItem[]
+
+  @@index([productId], map: "idx_variants_product")
+  @@index([inventoryCount], map: "idx_variants_inventory")
+  @@index([isActive, productId], map: "idx_variants_active")
+  @@map("product_variants")
+}
+
+model ProductVariantOption {
+  variantId  String @map("variant_id") @db.Uuid
+  templateId String @map("template_id") @db.Uuid
+  valueId    String @map("value_id") @db.Uuid
+
+  // Relations
+  variant  ProductVariant         @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  template VariationTemplate      @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  value    VariationTemplateValue @relation(fields: [valueId], references: [id], onDelete: Cascade)
+
+  @@id([variantId, templateId])
+  @@index([variantId], map: "idx_variant_options_variant")
+  @@map("product_variant_options")
+}
+
+model VariationTemplate {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String   @unique
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  values  VariationTemplateValue[]
+  options ProductVariantOption[]
+
+  @@map("variation_templates")
+}
+
+model VariationTemplateValue {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  templateId   String   @map("template_id") @db.Uuid
+  value        String
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  template VariationTemplate      @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  options  ProductVariantOption[]
+
+  @@unique([templateId, value])
+  @@index([templateId], map: "idx_variation_values_template")
+  @@map("variation_template_values")
+}
+
+// ============================================
+// CART & ORDERS
+// ============================================
+
+model CartItem {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  variantId String   @map("variant_id") @db.Uuid
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, variantId])
+  @@index([userId], map: "idx_cart_user")
+  @@index([variantId], map: "idx_cart_variant")
+  @@map("cart_items")
+}
+
+model Order {
+  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId                  String?   @map("user_id") @db.Uuid
+  email                   String
+  subtotal                Decimal   @db.Decimal(10, 2)
+  shippingCost            Decimal   @default(0) @map("shipping_cost") @db.Decimal(10, 2)
+  tax                     Decimal   @default(0) @db.Decimal(10, 2)
+  total                   Decimal   @db.Decimal(10, 2)
+  status                  String    @default("pending")
+  locked                  Boolean   @default(true)
+  expiresAt               DateTime? @map("expires_at") @db.Timestamptz
+  checkoutSessionId       String?   @unique @map("checkout_session_id")
+  shippingName            String?   @map("shipping_name")
+  shippingAddressLine1    String?   @map("shipping_address_line1")
+  shippingAddressLine2    String?   @map("shipping_address_line2")
+  shippingCity            String?   @map("shipping_city")
+  shippingState           String?   @map("shipping_state")
+  shippingZip             String?   @map("shipping_zip")
+  shippingCountry         String    @default("US") @map("shipping_country")
+  shippingPhone           String?   @map("shipping_phone")
+  trackingNumber          String?   @map("tracking_number")
+  carrier                 String?
+  paymentProvider         String    @map("payment_provider")
+  stripeCheckoutSessionId String?   @map("stripe_checkout_session_id")
+  stripePaymentIntentId   String?   @map("stripe_payment_intent_id")
+  paypalOrderId           String?   @map("paypal_order_id")
+  customerNotes           String?   @map("customer_notes")
+  adminNotes              String?   @map("admin_notes")
+  createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt               DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  paidAt                  DateTime? @map("paid_at") @db.Timestamptz
+  shippedAt               DateTime? @map("shipped_at") @db.Timestamptz
+  deliveredAt             DateTime? @map("delivered_at") @db.Timestamptz
+
+  // Relations
+  items        OrderItem[]
+  reservations InventoryReservation[]
+  errorLogs    ErrorLog[]
+
+  @@index([userId], map: "idx_orders_user")
+  @@index([status], map: "idx_orders_status")
+  @@index([email], map: "idx_orders_email")
+  @@index([createdAt(sort: Desc)], map: "idx_orders_created")
+  @@index([checkoutSessionId], map: "idx_orders_checkout_session")
+  @@index([status, locked, expiresAt], map: "idx_orders_pending_locked")
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId     String   @map("order_id") @db.Uuid
+  productId   String   @map("product_id") @db.Uuid
+  variantId   String?  @map("variant_id") @db.Uuid
+  productName String   @map("product_name")
+  variantName String?  @map("variant_name")
+  sku         String
+  price       Decimal  @db.Decimal(10, 2)
+  quantity    Int
+  lineTotal   Decimal  @map("line_total") @db.Decimal(10, 2)
+  imageUrl    String?  @map("image_url")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id], onDelete: NoAction)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: NoAction)
+
+  @@index([orderId], map: "idx_order_items_order")
+  @@index([productId], map: "idx_order_items_product")
+  @@map("order_items")
+}
+
+model InventoryReservation {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  variantId String   @map("variant_id") @db.Uuid
+  quantity  Int
+  userId    String?  @map("user_id") @db.Uuid
+  sessionId String?  @map("session_id")
+  orderId   String?  @map("order_id") @db.Uuid
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  order   Order?         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, variantId])
+  @@index([variantId], map: "idx_reservations_variant")
+  @@index([expiresAt], map: "idx_reservations_expires")
+  @@index([orderId], map: "idx_reservations_order")
+  @@index([variantId, expiresAt], map: "idx_reservations_variant_expires")
+  @@map("inventory_reservations")
+}
+
+// ============================================
+// SHIPPING
+// ============================================
+
+model ShippingRate {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String
+  rate                  Decimal  @db.Decimal(10, 2)
+  freeShippingThreshold Decimal? @map("free_shipping_threshold") @db.Decimal(10, 2)
+  countries             String[] @default(["US"])
+  isActive              Boolean  @default(true) @map("is_active")
+  displayOrder          Int      @default(0) @map("display_order")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([isActive, displayOrder], map: "idx_shipping_active")
+  @@map("shipping_rates")
+}
+
+// ============================================
+// SUPPORT TABLES
+// ============================================
+
+model AuditLog {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tableName     String   @map("table_name")
+  recordId      String   @map("record_id") @db.Uuid
+  action        String   // INSERT, UPDATE, DELETE
+  oldValues     Json?    @map("old_values")
+  newValues     Json?    @map("new_values")
+  changedFields String[] @map("changed_fields")
+  userId        String?  @map("user_id") @db.Uuid
+  userEmail     String?  @map("user_email")
+  ipAddress     String?  @map("ip_address") @db.Inet
+  userAgent     String?  @map("user_agent")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([tableName, recordId], map: "idx_audit_table_record")
+  @@index([userId], map: "idx_audit_user")
+  @@index([createdAt(sort: Desc)], map: "idx_audit_created")
+  @@map("audit_logs")
+}
+
+model ErrorLog {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  errorType       String    @map("error_type")
+  severity        String    // low, medium, high, critical
+  message         String
+  stackTrace      String?   @map("stack_trace")
+  errorCode       String?   @map("error_code")
+  endpoint        String?
+  method          String?
+  requestBody     Json?     @map("request_body")
+  responseBody    Json?     @map("response_body")
+  userId          String?   @map("user_id") @db.Uuid
+  orderId         String?   @map("order_id") @db.Uuid
+  metadata        Json?
+  resolved        Boolean   @default(false)
+  resolvedAt      DateTime? @map("resolved_at") @db.Timestamptz
+  resolvedBy      String?   @map("resolved_by") @db.Uuid
+  resolutionNotes String?   @map("resolution_notes")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  order Order? @relation(fields: [orderId], references: [id], onDelete: NoAction)
+
+  @@index([errorType], map: "idx_errors_type")
+  @@index([severity], map: "idx_errors_severity")
+  @@index([resolved, createdAt(sort: Desc)], map: "idx_errors_unresolved")
+  @@index([createdAt(sort: Desc)], map: "idx_errors_created")
+  @@map("error_logs")
+}
