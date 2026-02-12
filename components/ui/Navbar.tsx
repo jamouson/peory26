@@ -269,36 +269,45 @@ export function Navigation() {
 
                 {/* ── Simple links ── */}
                 <NavigationMenuItem>
-                  <Link href={siteConfig.baseLinks.wedding} legacyBehavior passHref>
-                    <NavigationMenuLink className={cn(
-                      navigationMenuTriggerStyle(),
-                      "bg-transparent text-sm font-medium text-gray-700 hover:bg-gray-100/80 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800/60 dark:hover:text-gray-100"
-                    )}>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href={siteConfig.baseLinks.wedding}
+                      className={cn(
+                        navigationMenuTriggerStyle(),
+                        "bg-transparent text-sm font-medium text-gray-700 hover:bg-gray-100/80 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800/60 dark:hover:text-gray-100"
+                      )}
+                    >
                       Wedding
-                    </NavigationMenuLink>
-                  </Link>
+                    </Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                  <Link href={siteConfig.baseLinks.classes} legacyBehavior passHref>
-                    <NavigationMenuLink className={cn(
-                      navigationMenuTriggerStyle(),
-                      "bg-transparent text-sm font-medium text-gray-700 hover:bg-gray-100/80 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800/60 dark:hover:text-gray-100"
-                    )}>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href={siteConfig.baseLinks.classes}
+                      className={cn(
+                        navigationMenuTriggerStyle(),
+                        "bg-transparent text-sm font-medium text-gray-700 hover:bg-gray-100/80 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800/60 dark:hover:text-gray-100"
+                      )}
+                    >
                       Classes
-                    </NavigationMenuLink>
-                  </Link>
+                    </Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                  <Link href={siteConfig.baseLinks.faq} legacyBehavior passHref>
-                    <NavigationMenuLink className={cn(
-                      navigationMenuTriggerStyle(),
-                      "bg-transparent text-sm font-medium text-gray-700 hover:bg-gray-100/80 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800/60 dark:hover:text-gray-100"
-                    )}>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href={siteConfig.baseLinks.faq}
+                      className={cn(
+                        navigationMenuTriggerStyle(),
+                        "bg-transparent text-sm font-medium text-gray-700 hover:bg-gray-100/80 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800/60 dark:hover:text-gray-100"
+                      )}
+                    >
                       FAQ
-                    </NavigationMenuLink>
-                  </Link>
+                    </Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>

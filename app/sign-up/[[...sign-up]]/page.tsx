@@ -206,7 +206,10 @@ export default function SignUpPage() {
 
                 {/* Error Message */}
                 {error && (
-                  <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                  <div
+                    className="rounded-md bg-destructive/15 p-3 text-sm text-destructive"
+                    role="alert"
+                  >
                     {error}
                   </div>
                 )}
@@ -254,6 +257,17 @@ export default function SignUpPage() {
                 Instagram
               </Button>
             </div>
+
+            {/* Sign in link */}
+            <p className="text-center text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link
+                href="/sign-in"
+                className="font-medium text-primary underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
+              >
+                Sign in
+              </Link>
+            </p>
           </div>
 
           {/* Terms */}
@@ -306,7 +320,10 @@ export default function SignUpPage() {
               </div>
 
               {error && (
-                <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                <div
+                  className="rounded-md bg-destructive/15 p-3 text-sm text-destructive"
+                  role="alert"
+                >
                   {error}
                 </div>
               )}

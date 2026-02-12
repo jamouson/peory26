@@ -175,7 +175,7 @@ export default function SignInPage() {
 
   return (
     <AuthLayout
-      topRightButton={{ href: "/waitlist", label: "Sign up" }}
+      topRightButton={{ href: "/sign-up", label: "Sign up" }}
       sidebarContent={<TestimonialCarousel />}
     >
       {!verifying ? (
@@ -183,7 +183,7 @@ export default function SignInPage() {
           {/* Header */}
           <div className="flex flex-col space-y-2 text-center">
             <h1 className="text-2xl font-semibold tracking-tight">
-              Sign in to your account
+              Welcome back
             </h1>
             <p className="text-sm text-muted-foreground">
               Enter your email or phone to receive a verification code
@@ -213,7 +213,10 @@ export default function SignInPage() {
 
                 {/* Error Message */}
                 {error && (
-                  <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                  <div
+                    className="rounded-md bg-destructive/15 p-3 text-sm text-destructive"
+                    role="alert"
+                  >
                     {error}
                   </div>
                 )}
@@ -261,6 +264,17 @@ export default function SignInPage() {
                 Instagram
               </Button>
             </div>
+
+            {/* Sign up link */}
+            <p className="text-center text-sm text-muted-foreground">
+              Don&apos;t have an account?{" "}
+              <Link
+                href="/sign-up"
+                className="font-medium text-primary underline underline-offset-4 hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
+              >
+                Sign up
+              </Link>
+            </p>
           </div>
 
           {/* Terms */}
@@ -313,7 +327,10 @@ export default function SignInPage() {
               </div>
 
               {error && (
-                <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                <div
+                  className="rounded-md bg-destructive/15 p-3 text-sm text-destructive"
+                  role="alert"
+                >
                   {error}
                 </div>
               )}

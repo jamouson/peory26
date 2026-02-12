@@ -139,6 +139,7 @@ export function TestimonialCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isVisible, setIsVisible] = useState(true)
   const [loaded, setLoaded] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
 
   // Fetch reviews on mount
   useEffect(() => {
@@ -170,9 +171,9 @@ export function TestimonialCarousel() {
     }
   }, [])
 
-  // Auto-rotate with dynamic timing based on quote length
+  // Auto-rotate with dynamic timing based on quote length (pauses on hover)
   useEffect(() => {
-    if (reviews.length <= 1) return
+    if (reviews.length <= 1 || isPaused) return
 
     const current = reviews[currentIndex]
     const displayQuote = truncateQuote(current.quote)
@@ -188,7 +189,7 @@ export function TestimonialCarousel() {
     }, duration)
 
     return () => clearTimeout(timeout)
-  }, [reviews, currentIndex])
+  }, [reviews, currentIndex, isPaused])
 
   // Manual dot navigation
   const goTo = useCallback(
@@ -213,7 +214,11 @@ export function TestimonialCarousel() {
   const displayQuote = truncateQuote(current.quote)
 
   return (
-    <div className="relative flex h-full flex-col justify-between">
+    <div
+      className="relative flex h-full flex-col justify-between"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
       {/* Quote */}
       <div className="flex flex-1 items-center">
         <blockquote
