@@ -111,33 +111,6 @@ function truncateQuote(text: string, max = 180): string {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function SkeletonCard() {
-  return (
-    <div className="flex h-full flex-col justify-between rounded-2xl border border-foreground/[0.06] bg-card p-6 shadow-sm sm:p-8">
-      <div className="mb-4"><div className="h-7 w-7 animate-pulse rounded bg-muted" /></div>
-      <div className="mb-6 flex-1 space-y-3">
-        <div className="h-3.5 w-full animate-pulse rounded bg-muted" />
-        <div className="h-3.5 w-full animate-pulse rounded bg-muted" />
-        <div className="h-3.5 w-4/5 animate-pulse rounded bg-muted" />
-      </div>
-      <div className="flex items-center justify-between border-t border-foreground/[0.06] pt-5">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 animate-pulse rounded-full bg-muted" />
-          <div className="flex flex-col gap-2">
-            <div className="h-3.5 w-24 animate-pulse rounded bg-muted" />
-            <div className="h-3 w-16 animate-pulse rounded bg-muted" />
-          </div>
-        </div>
-        <div className="flex gap-0.5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-3.5 w-3.5 animate-pulse rounded bg-muted" />
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex gap-0.5">
@@ -219,7 +192,6 @@ const MAX_DOTS = 3
 
 export function CustomerReviews() {
   const [reviews, setReviews] = useState<Review[]>(fallbackReviews)
-  const [isLoading, setIsLoading] = useState(true)
 
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true,
@@ -232,7 +204,7 @@ export function CustomerReviews() {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [scrollSnaps, setScrollSnaps] = useState<number[]>([])
 
-  // ── Fetch ──
+  // ── Silently upgrade with live data when available ──
   useEffect(() => {
     let cancelled = false
     fetch("/api/reviews/testimonials")
@@ -240,8 +212,7 @@ export function CustomerReviews() {
       .then((data: Review[]) => {
         if (!cancelled && data.length > 0) setReviews(data)
       })
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setIsLoading(false) })
+      .catch(() => {/* keep fallback reviews */})
     return () => { cancelled = true }
   }, [])
 
@@ -262,6 +233,11 @@ export function CustomerReviews() {
   useEffect(() => {
     onInit()
   }, [onInit])
+
+  // Reinit carousel when reviews swap from fallback → live data
+  useEffect(() => {
+    if (emblaApi) emblaApi.reInit()
+  }, [emblaApi, reviews])
 
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi])
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi])
@@ -288,24 +264,18 @@ export function CustomerReviews() {
         <div className="group relative">
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="-ml-4 flex touch-pan-y">
-              {isLoading
-                ? Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="min-w-0 flex-[0_0_100%] pl-4 sm:flex-[0_0_50%] lg:flex-[0_0_33.333%]">
-                      <SkeletonCard />
-                    </div>
-                  ))
-                : reviews.map((r) => (
-                    <div key={r.id} className="min-w-0 flex-[0_0_100%] pl-4 sm:flex-[0_0_50%] lg:flex-[0_0_33.333%]">
-                      <div className="h-full">
-                        <ReviewCard review={r} />
-                      </div>
-                    </div>
-                  ))}
+              {reviews.map((r) => (
+                <div key={r.id} className="min-w-0 flex-[0_0_100%] pl-4 sm:flex-[0_0_50%] lg:flex-[0_0_33.333%]">
+                  <div className="h-full">
+                    <ReviewCard review={r} />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Arrows */}
-          {!isLoading && reviews.length > 1 && (
+          {reviews.length > 1 && (
             <>
               <button
                 onClick={scrollPrev}
@@ -326,7 +296,7 @@ export function CustomerReviews() {
         </div>
 
         {/* Dots — capped at MAX_DOTS */}
-        {!isLoading && scrollSnaps.length > 1 && (
+        {scrollSnaps.length > 1 && (
           <div className="mt-8 flex justify-center gap-2">
             {scrollSnaps.slice(0, MAX_DOTS).map((_, index) => (
               <button

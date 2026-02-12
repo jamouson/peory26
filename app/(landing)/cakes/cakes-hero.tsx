@@ -252,7 +252,7 @@ export function CakesHero() {
             <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
               Handcrafted Cakes for
               <br />
-              <span className="bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent dark:from-rose-400 dark:to-pink-400">
+              <span className="text-brand-600 dark:text-brand-400">
                 Every Occasion
               </span>
             </h1>
