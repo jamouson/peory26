@@ -4,6 +4,7 @@
 //   "Creations" opens a multi-column dropdown panel with product categories.
 //   Wedding, Classes, FAQ are simple links. How to Order is the CTA.
 //   Logo starts large (w-44) and shrinks (w-28) on scroll.
+//   Logo has viewTransitionName for cross-page glide animation to auth pages.
 // =============================================================================
 
 "use client"
@@ -12,6 +13,7 @@ import { siteConfig } from "@/app/siteConfig"
 import useScroll from "@/lib/use-scroll"
 import { cx } from "@/lib/utils"
 import { RiCloseLine, RiMenuLine } from "@remixicon/react"
+import { Link as TransitionLink } from "next-view-transitions"
 import Link from "next/link"
 import React from "react"
 import { DatabaseLogo } from "@/components/icons/DatabaseLogo"
@@ -177,15 +179,19 @@ export function Navigation() {
     >
       <div className="w-full">
         <div className="flex items-center justify-between">
-          {/* ─── Logo (shrinks on scroll) ─── */}
+          {/* ─── Logo (shrinks on scroll) — tagged for view transition ─── */}
           <Link href="/" aria-label="Home" className="shrink-0">
             <span className="sr-only">Peory Cake</span>
-            <DatabaseLogo
-              className={cx(
-                "transition-all duration-300 ease-out",
-                scrolled ? "w-28" : "w-44"
-              )}
-            />
+            <div style={{ viewTransitionName: "peory-logo" }}>
+              <DatabaseLogo
+                className={cx(
+                  "transition-all duration-300 ease-out",
+                  scrolled
+                  ? "h-8 w-auto md:h-auto md:w-28"
+                  : "h-10 w-auto md:h-auto md:w-44"
+                )}
+              />
+            </div>
           </Link>
 
           {/* ─── Desktop Navigation (mega menu) ─── */}
@@ -306,9 +312,10 @@ export function Navigation() {
               <UserDropdown />
             </SignedIn>
             <SignedOut>
-              <Link href="/sign-in">
-                <Button>How to Order</Button>
-              </Link>
+              {/* TransitionLink triggers view transition when navigating to auth */}
+              <TransitionLink href="/sign-in">
+                <Button>Inquiry Form</Button>
+              </TransitionLink>
             </SignedOut>
           </div>
 
@@ -320,9 +327,9 @@ export function Navigation() {
               <UserDropdown />
             </SignedIn>
             <SignedOut>
-              <Link href="/sign-in">
-                <Button>Sign in</Button>
-              </Link>
+              <TransitionLink href="/sign-in">
+                <Button>Inquiry Form</Button>
+              </TransitionLink>
             </SignedOut>
             <Button
               onClick={() => {

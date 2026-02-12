@@ -27,6 +27,7 @@ export function FAQSection({ faqByCategory }: FAQSectionProps) {
   // Drag-to-scroll refs
   const scrollRef = useRef<HTMLDivElement>(null)
   const dragState = useRef({ active: false, startX: 0, scrollLeft: 0, moved: false })
+  const edgeScrollRAF = useRef<number>(0)
 
   const categories = useMemo(() => Object.keys(faqByCategory), [faqByCategory])
   const allFaqs = useMemo(() => Object.values(faqByCategory).flat(), [faqByCategory])
@@ -90,6 +91,42 @@ export function FAQSection({ faqByCategory }: FAQSectionProps) {
     dragState.current.active = false
   }, [])
 
+  // Edge hover auto-scroll
+  const stopEdgeScroll = useCallback(() => {
+    if (edgeScrollRAF.current) {
+      cancelAnimationFrame(edgeScrollRAF.current)
+      edgeScrollRAF.current = 0
+    }
+  }, [])
+
+  const onHoverMove = useCallback((e: React.MouseEvent) => {
+    if (dragState.current.active) return
+    const el = scrollRef.current
+    if (!el) return
+
+    const rect = el.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const edgeZone = 60 // px from edge to trigger scroll
+    const speed = 1.5 // px per frame
+
+    stopEdgeScroll()
+
+    if (x < edgeZone && el.scrollLeft > 0) {
+      const tick = () => {
+        el.scrollLeft -= speed
+        if (el.scrollLeft > 0) edgeScrollRAF.current = requestAnimationFrame(tick)
+      }
+      edgeScrollRAF.current = requestAnimationFrame(tick)
+    } else if (x > rect.width - edgeZone && el.scrollLeft < el.scrollWidth - el.clientWidth) {
+      const tick = () => {
+        el.scrollLeft += speed
+        if (el.scrollLeft < el.scrollWidth - el.clientWidth)
+          edgeScrollRAF.current = requestAnimationFrame(tick)
+      }
+      edgeScrollRAF.current = requestAnimationFrame(tick)
+    }
+  }, [stopEdgeScroll])
+
   const handleCategoryClick = useCallback(
     (category: string | null) => {
       if (dragState.current.moved) return
@@ -135,9 +172,9 @@ export function FAQSection({ faqByCategory }: FAQSectionProps) {
           <div
             ref={scrollRef}
             onMouseDown={onDragStart}
-            onMouseMove={onDragMove}
+            onMouseMove={(e) => { onDragMove(e); onHoverMove(e) }}
             onMouseUp={onDragEnd}
-            onMouseLeave={onDragEnd}
+            onMouseLeave={() => { onDragEnd(); stopEdgeScroll() }}
             className="mt-4 flex select-none gap-2 overflow-x-auto pb-2 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent"
           >
             {[null, ...categories].map((cat) => {

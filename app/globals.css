@@ -201,3 +201,24 @@ a {
 *:hover > .anchor-link {
   @apply visible;
 }
+
+/* =============================================================================
+   View Transitions — Logo glide animation
+   Add this to your globals.css
+   ============================================================================= */
+
+/* Smooth glide for the logo between pages */
+::view-transition-old(peory-logo),
+::view-transition-new(peory-logo) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1.03);
+  /* Keep the logo visible throughout (no fade, just morph position/size) */
+  animation-fill-mode: both;
+}
+
+/* Make the page cross-fade faster so the logo glide is the star */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.3s;
+  animation-timing-function: ease-out;
+}
