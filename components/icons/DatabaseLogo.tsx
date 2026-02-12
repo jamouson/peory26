@@ -7,27 +7,27 @@ interface DatabaseLogoProps {
 }
 
 export const DatabaseLogo = ({ className, width = 250 }: DatabaseLogoProps) => {
-  // Original image aspect ratio is ~3.04:1 (1653x543)
-  const height = Math.round(width / 3.04)
+  // Logo aspect ratio is ~2.52:1 (702x279)
+  const height = Math.round(width / 2.52)
 
   return (
     <>
-      {/* Light mode: original orange logo */}
+      {/* Light mode */}
       <Image
-        src="/logo.webp"
-        alt="Peory Cake"
+        src="/logo-default.webp"
+        alt="Peory L'atelier Cake"
         width={width}
         height={height}
-        className={`dark:hidden ${className ?? ""}`}
+        className={`dark:hidden object-contain ${className ?? ""}`}
         priority
       />
-      {/* Dark mode: white logo */}
+      {/* Dark mode */}
       <Image
-        src="/logo-wt.webp"
-        alt="Peory Cake"
+        src="/logo-white.webp"
+        alt="Peory L'atelier Cake"
         width={width}
         height={height}
-        className={`hidden dark:block ${className ?? ""}`}
+        className={`hidden dark:block object-contain ${className ?? ""}`}
         priority
       />
     </>

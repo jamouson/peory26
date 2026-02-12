@@ -101,8 +101,12 @@ export function Navigation() {
   return (
     <header
       className={cx(
-        "fixed inset-x-3 top-4 z-50 mx-auto flex max-w-6xl transform-gpu animate-slide-down-fade justify-center overflow-hidden rounded-xl border border-transparent px-3 py-3 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1.03)] will-change-transform",
-        open === true ? "h-52" : "h-16",
+        "fixed inset-x-3 top-4 z-50 mx-auto flex max-w-6xl transform-gpu animate-slide-down-fade justify-center overflow-hidden rounded-xl border border-transparent px-3 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1.03)] will-change-transform",
+        open === true
+          ? "h-60 py-3"
+          : scrolled
+            ? "h-16 py-2"
+            : "h-24 py-3",
         scrolled || open === true
           ? "border-gray-200/50 bg-white/80 shadow-md backdrop-blur-xl dark:border-white/10 dark:bg-gray-950/80"
           : "bg-white/0 dark:bg-gray-950/0",
@@ -112,8 +116,13 @@ export function Navigation() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" aria-label="Home">
-            <span className="sr-only">Company logo</span>
-            <DatabaseLogo className="w-40" />
+            <span className="sr-only">Peory Cake</span>
+            <DatabaseLogo
+              className={cx(
+                "w-auto transition-all duration-300",
+                scrolled ? "h-12" : "h-16",
+              )}
+            />
           </Link>
 
           {/* Desktop nav links */}

@@ -24,9 +24,9 @@ export function AuthLayout({
     <div className="relative grid min-h-screen flex-col items-center justify-center lg:grid-cols-2">
       {/* Mobile Logo */}
       {showLogo && (
-        <div className="absolute left-4 top-4 z-20 flex h-10 items-center md:left-8 md:top-8 lg:hidden">
+        <div className="absolute left-4 top-4 z-20 flex items-center md:left-8 md:top-8 lg:hidden">
           <Link href="/" aria-label="Home">
-            <DatabaseLogo className="w-32 text-foreground" />
+            <DatabaseLogo className="h-16 w-auto" />
           </Link>
         </div>
       )}
@@ -45,7 +45,7 @@ export function AuthLayout({
           <div className="absolute inset-0 bg-zinc-900" />
           <div className="relative z-20 flex items-center text-lg font-medium">
             <Link href="/" aria-label="Home">
-              <DatabaseLogo className="w-32 text-white" />
+              <DatabaseLogo className="h-16 w-auto" />
             </Link>
           </div>
           <div className="relative z-20 mt-auto">{sidebarContent}</div>
