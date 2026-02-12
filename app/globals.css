@@ -44,6 +44,18 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  /* Hermès orange brand palette */
+  --color-brand-50: oklch(0.963 0.027 69.259);
+  --color-brand-100: oklch(0.930 0.050 55);
+  --color-brand-200: oklch(0.870 0.090 50);
+  --color-brand-300: oklch(0.800 0.130 48);
+  --color-brand-400: oklch(0.740 0.160 47);
+  --color-brand-500: oklch(0.675 0.183 45.403);
+  --color-brand-600: oklch(0.572 0.163 45.278);
+  --color-brand-700: oklch(0.480 0.140 44);
+  --color-brand-800: oklch(0.400 0.110 43);
+  --color-brand-900: oklch(0.330 0.085 42);
+  --color-brand-950: oklch(0.250 0.060 41);
 }
 
 @font-face {

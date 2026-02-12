@@ -37,7 +37,7 @@ function UserDropdown() {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <button className="flex size-8 items-center justify-center rounded-full bg-gray-200 outline-none hover:bg-gray-300 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:bg-gray-700 dark:hover:bg-gray-600">
+        <button className="flex size-8 items-center justify-center rounded-full bg-gray-200 outline-none hover:bg-gray-300 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:bg-gray-700 dark:hover:bg-gray-600">
           <IconUser className="size-4 text-gray-600 dark:text-gray-300" />
         </button>
       </DropdownMenuTrigger>
