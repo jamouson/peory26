@@ -55,7 +55,7 @@ export async function withAuditContext<T>(
   operation: () => Promise<T>
 ): Promise<T> {
   // Use $transaction to ensure SET LOCAL is in the same transaction
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     if (userId) {
       await tx.$executeRaw`SELECT set_config('app.current_user_id', ${userId}, true)`;
     }

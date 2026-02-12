@@ -76,27 +76,18 @@ const flavors = [
 
 // ---------------------------------------------------------------------------
 // Bento positions — 4-col grid, 3 rows
-//
-// ┌──────────────┬─────────┬─────────┐
-// │  Chocolate   │Blueberry│  Lemon  │
-// │   (2x2)      │         │         │
-// │              ├─────────┼─────────┤
-// │              │ Caramel │  Matcha │
-// ├─────────┬────┴────┬────┴───┬─────┤
-// │ Vanilla │Strawb.  │Raspb.  │Earl │
-// └─────────┴─────────┴────────┴─────┘
 // ---------------------------------------------------------------------------
 
 const bentoPositions = [
-  { colSpan: "sm:col-span-2", rowSpan: "sm:row-span-2", height: "h-48 sm:h-full" },
-  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-48 sm:h-full" },
-  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-48 sm:h-full" },
-  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-48 sm:h-full" },
-  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-48 sm:h-full" },
-  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-48 sm:h-full" },
-  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-48 sm:h-full" },
-  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-48 sm:h-full" },
-  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-48 sm:h-full" },
+  { colSpan: "sm:col-span-2", rowSpan: "sm:row-span-2", height: "h-64 sm:h-full" },
+  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-64 sm:h-full" },
+  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-64 sm:h-full" },
+  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-64 sm:h-full" },
+  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-64 sm:h-full" },
+  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-64 sm:h-full" },
+  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-64 sm:h-full" },
+  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-64 sm:h-full" },
+  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-64 sm:h-full" },
 ]
 
 // ---------------------------------------------------------------------------
@@ -114,28 +105,40 @@ function FlavorCard({
 }) {
   return (
     <div
-      className={`flavor-card group/flavor relative overflow-hidden rounded-2xl ${position.colSpan} ${position.rowSpan} ${position.height}`}
-      style={{ animationDelay: `${index * 60}ms` }}
+      // Mobile: 'sticky' positioning. Desktop: 'static' (default grid behavior).
+      className={`flavor-card group/flavor relative overflow-hidden rounded-2xl border border-white/10 shadow-lg 
+        sticky sm:static 
+        ${position.colSpan} ${position.rowSpan} ${position.height}`}
+      style={{
+        // 1. Animation stagger
+        animationDelay: `${index * 60}ms`,
+        // 2. STACKING LOGIC (Mobile Only):
+        //    top: 6rem (base offset for navbar) + (index * 10px) (creates the visible stack)
+        //    zIndex: ensures later cards sit on top of earlier ones
+        top: `calc(6rem + ${index * 10}px)`,
+        zIndex: index + 10,
+      }}
     >
       <img
         src={flavor.image}
         alt={flavor.title}
+        loading="lazy"
         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out will-change-transform group-hover/flavor:scale-105"
       />
 
       {/* Default — title at bottom */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent p-4 pt-12 transition-opacity duration-300 group-hover/flavor:opacity-0">
-        <h3 className="text-base font-semibold tracking-tight text-white">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-12 transition-opacity duration-300 group-hover/flavor:opacity-0">
+        <h3 className="text-lg font-bold tracking-tight text-white drop-shadow-md">
           {flavor.title}
         </h3>
       </div>
 
       {/* Hover — full overlay with description */}
-      <div className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/60 to-black/10 p-4 opacity-0 transition-opacity duration-300 ease-out group-hover/flavor:opacity-100">
-        <h3 className="text-base font-semibold tracking-tight text-white">
+      <div className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/70 to-black/20 p-5 opacity-0 transition-opacity duration-300 ease-out group-hover/flavor:opacity-100">
+        <h3 className="text-lg font-bold tracking-tight text-white">
           {flavor.title}
         </h3>
-        <p className="mt-1.5 text-sm leading-relaxed text-white/75">
+        <p className="mt-2 text-sm leading-relaxed text-white/80">
           {flavor.description}
         </p>
       </div>
@@ -153,7 +156,17 @@ export function CakeFlavors() {
       <style>{`
         .flavor-card {
           opacity: 0;
-          animation: fade-up 0.5s ease-out forwards;
+          animation: fade-up 0.6s ease-out forwards;
+        }
+        @keyframes fade-up {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
       `}</style>
 
@@ -170,8 +183,12 @@ export function CakeFlavors() {
           </p>
         </div>
 
-        {/* Bento Grid */}
-        <div className="mt-12 grid auto-rows-[180px] grid-cols-1 gap-3 sm:mt-14 sm:auto-rows-[200px] sm:grid-cols-4">
+        {/* Container Layout:
+          - Mobile: 'flex flex-col' allows the sticky items to stack naturally in a column.
+          - Desktop: 'sm:grid' activates the Bento grid.
+          - 'pb-24': Adds space at the bottom so the last card in the stack can be fully viewed.
+        */}
+        <div className="mt-12 flex flex-col gap-4 pb-24 sm:mt-14 sm:grid sm:auto-rows-[200px] sm:grid-cols-4 sm:gap-3 sm:pb-0">
           {flavors.map((flavor, i) => (
             <FlavorCard
               key={flavor.id}
