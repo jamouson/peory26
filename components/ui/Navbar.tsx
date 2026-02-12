@@ -1,4 +1,11 @@
-// components/ui/Navbar.tsx
+// =============================================================================
+// File: components/ui/Navbar.tsx
+// Description: Customer-facing navbar with shadcn NavigationMenu mega menu.
+//   "Creations" opens a multi-column dropdown panel with product categories.
+//   Wedding, Classes, FAQ are simple links. How to Order is the CTA.
+//   Logo starts large (w-44) and shrinks (w-28) on scroll.
+// =============================================================================
+
 "use client"
 
 import { siteConfig } from "@/app/siteConfig"
@@ -22,12 +29,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu"
+import {
   IconUser,
   IconLayoutDashboard,
   IconShoppingBag,
   IconLogout,
+  IconChevronDown,
 } from "@tabler/icons-react"
+import { cn } from "@/lib/utils"
 
+// =============================================================================
+// UserDropdown
+// =============================================================================
 function UserDropdown() {
   const { user } = useUser()
   const { signOut } = useClerk()
@@ -37,7 +58,7 @@ function UserDropdown() {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <button className="flex size-8 items-center justify-center rounded-full bg-gray-200 outline-none hover:bg-gray-300 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:bg-gray-700 dark:hover:bg-gray-600">
+        <button className="flex size-8 items-center justify-center rounded-full bg-gray-200 outline-none hover:bg-gray-300 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:bg-gray-700 dark:hover:bg-gray-600">
           <IconUser className="size-4 text-gray-600 dark:text-gray-300" />
         </button>
       </DropdownMenuTrigger>
@@ -80,14 +101,58 @@ function UserDropdown() {
   )
 }
 
+// =============================================================================
+// ListItem — reusable link item inside the mega menu
+// =============================================================================
+const ListItem = React.forwardRef<
+  React.ComponentRef<"a">,
+  React.ComponentPropsWithoutRef<"a"> & { badge?: string }
+>(({ className, title, children, badge, href, ...props }, ref) => {
+  return (
+    <li>
+      <NavigationMenuLink asChild>
+        <Link
+          ref={ref as React.Ref<HTMLAnchorElement>}
+          href={href || "#"}
+          className={cn(
+            "block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+            className
+          )}
+          {...props}
+        >
+          <div className="flex items-center gap-2">
+            <div className="text-sm font-medium leading-none">{title}</div>
+            {badge && (
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                {badge}
+              </span>
+            )}
+          </div>
+          {children && (
+            <p className="mt-1.5 line-clamp-2 text-xs leading-snug text-muted-foreground">
+              {children}
+            </p>
+          )}
+        </Link>
+      </NavigationMenuLink>
+    </li>
+  )
+})
+ListItem.displayName = "ListItem"
+
+// =============================================================================
+// Navigation — main exported component
+// =============================================================================
 export function Navigation() {
   const scrolled = useScroll(15)
   const [open, setOpen] = React.useState(false)
+  const [creationsOpen, setCreationsOpen] = React.useState(false)
 
   React.useEffect(() => {
     const mediaQuery: MediaQueryList = window.matchMedia("(min-width: 768px)")
     const handleMediaQueryChange = () => {
       setOpen(false)
+      setCreationsOpen(false)
     }
 
     mediaQuery.addEventListener("change", handleMediaQueryChange)
@@ -101,54 +166,140 @@ export function Navigation() {
   return (
     <header
       className={cx(
-        "fixed inset-x-3 top-4 z-50 mx-auto flex max-w-6xl transform-gpu animate-slide-down-fade justify-center overflow-hidden rounded-xl border border-transparent px-3 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1.03)] will-change-transform",
-        open === true
-          ? "h-60 py-3"
-          : scrolled
-            ? "h-16 py-2"
-            : "h-24 py-3",
-        scrolled || open === true
+        "fixed inset-x-3 top-4 z-50 mx-auto flex max-w-6xl transform-gpu animate-slide-down-fade justify-center rounded-xl border border-transparent px-3 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1.03)] will-change-transform",
+        open ? "h-auto" : scrolled ? "h-14" : "h-16",
+        scrolled ? "py-2" : "py-3",
+        "overflow-hidden md:overflow-visible",
+        scrolled || open
           ? "border-gray-200/50 bg-white/80 shadow-md backdrop-blur-xl dark:border-white/10 dark:bg-gray-950/80"
           : "bg-white/0 dark:bg-gray-950/0",
       )}
     >
       <div className="w-full">
         <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" aria-label="Home">
+          {/* ─── Logo (shrinks on scroll) ─── */}
+          <Link href="/" aria-label="Home" className="shrink-0">
             <span className="sr-only">Peory Cake</span>
             <DatabaseLogo
               className={cx(
-                "w-auto transition-all duration-300",
-                scrolled ? "h-12" : "h-16",
+                "transition-all duration-300 ease-out",
+                scrolled ? "w-28" : "w-44"
               )}
             />
           </Link>
 
-          {/* Desktop nav links */}
-          <nav className="hidden md:flex md:items-center md:gap-x-6">
-            <Link
-              href={siteConfig.baseLinks.about}
-              className="text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
-            >
-              About
-            </Link>
-            <Link
-              href={siteConfig.baseLinks.pricing}
-              className="text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
-            >
-              Pricing
-            </Link>
-            <Link
-              href={siteConfig.baseLinks.changelog}
-              className="text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
-            >
-              Changelog
-            </Link>
-          </nav>
+          {/* ─── Desktop Navigation (mega menu) ─── */}
+          <div className="hidden md:flex md:items-center md:justify-center md:flex-1">
+            <NavigationMenu>
+              <NavigationMenuList>
+                {/* ── Creations (mega menu dropdown) ── */}
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-transparent text-sm font-medium text-gray-700 hover:bg-gray-100/80 hover:text-gray-900 data-[state=open]:bg-gray-100/80 dark:text-gray-300 dark:hover:bg-gray-800/60 dark:hover:text-gray-100 dark:data-[state=open]:bg-gray-800/60">
+                    Creations
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="grid w-[600px] gap-3 p-4 md:grid-cols-[1fr_0.75fr_0.75fr]">
+                      {/* Column 1: Featured Cakes card */}
+                      <NavigationMenuLink asChild>
+                        <Link
+                          href={siteConfig.baseLinks.cakes}
+                          className="group flex h-full flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-4 no-underline outline-none transition-colors hover:from-muted hover:to-muted/80 focus:shadow-md"
+                        >
+                          <div className="mb-1 text-lg font-semibold">
+                            Cakes
+                          </div>
+                          <p className="text-sm leading-snug text-muted-foreground">
+                            Our signature buttercream floral art cakes crafted
+                            with premium organic ingredients.
+                          </p>
+                          <span className="mt-3 inline-flex text-xs font-medium text-primary group-hover:underline">
+                            Explore Cakes →
+                          </span>
+                        </Link>
+                      </NavigationMenuLink>
 
-          {/* Desktop right side */}
-          <div className="hidden items-center gap-x-2 md:flex">
+                      {/* Column 2: Products + Collections */}
+                      <div className="space-y-1">
+                        <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Products
+                        </p>
+                        <ul className="space-y-0">
+                          <ListItem href={siteConfig.baseLinks.cupcakes} title="Cupcakes">
+                            Half &amp; full dozen
+                          </ListItem>
+                          <ListItem href={siteConfig.baseLinks.numberCakes} title="Number Cakes">
+                            Single &amp; double digits
+                          </ListItem>
+                          <ListItem href={siteConfig.baseLinks.pure} title="PURE by Peory">
+                            Pre-designed minimalist cakes
+                          </ListItem>
+                        </ul>
+                      </div>
+
+                      {/* Column 3: Collections + Info */}
+                      <div className="space-y-1">
+                        <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Browse
+                        </p>
+                        <ul className="space-y-0">
+                          <ListItem
+                            href={siteConfig.baseLinks.collections}
+                            title="Collections"
+                            badge="Updated"
+                          >
+                            Browse all collections
+                          </ListItem>
+                          <ListItem href="#flavors" title="Flavors & Fillings">
+                            Available options
+                          </ListItem>
+                          <ListItem href={siteConfig.baseLinks.pricing} title="Pricing">
+                            Pricing details
+                          </ListItem>
+                        </ul>
+                      </div>
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+
+                {/* ── Simple links ── */}
+                <NavigationMenuItem>
+                  <Link href={siteConfig.baseLinks.wedding} legacyBehavior passHref>
+                    <NavigationMenuLink className={cn(
+                      navigationMenuTriggerStyle(),
+                      "bg-transparent text-sm font-medium text-gray-700 hover:bg-gray-100/80 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800/60 dark:hover:text-gray-100"
+                    )}>
+                      Wedding
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+
+                <NavigationMenuItem>
+                  <Link href={siteConfig.baseLinks.classes} legacyBehavior passHref>
+                    <NavigationMenuLink className={cn(
+                      navigationMenuTriggerStyle(),
+                      "bg-transparent text-sm font-medium text-gray-700 hover:bg-gray-100/80 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800/60 dark:hover:text-gray-100"
+                    )}>
+                      Classes
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+
+                <NavigationMenuItem>
+                  <Link href={siteConfig.baseLinks.faq} legacyBehavior passHref>
+                    <NavigationMenuLink className={cn(
+                      navigationMenuTriggerStyle(),
+                      "bg-transparent text-sm font-medium text-gray-700 hover:bg-gray-100/80 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800/60 dark:hover:text-gray-100"
+                    )}>
+                      FAQ
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+          </div>
+
+          {/* ─── Desktop right side ─── */}
+          <div className="hidden shrink-0 items-center gap-x-2 md:flex">
             <ModeToggle />
             <SignedIn>
               <CartIcon />
@@ -156,12 +307,12 @@ export function Navigation() {
             </SignedIn>
             <SignedOut>
               <Link href="/sign-in">
-                <Button>Sign in</Button>
+                <Button>How to Order</Button>
               </Link>
             </SignedOut>
           </div>
 
-          {/* Mobile right side */}
+          {/* ─── Mobile right side ─── */}
           <div className="flex gap-x-2 md:hidden">
             <ModeToggle />
             <SignedIn>
@@ -174,7 +325,10 @@ export function Navigation() {
               </Link>
             </SignedOut>
             <Button
-              onClick={() => setOpen(!open)}
+              onClick={() => {
+                setOpen(!open)
+                if (open) setCreationsOpen(false)
+              }}
               variant="light"
               className="aspect-square p-2"
             >
@@ -187,22 +341,114 @@ export function Navigation() {
           </div>
         </div>
 
-        {/* Mobile nav links */}
+        {/* ─── Mobile nav links ─── */}
         <nav
           className={cx(
-            "my-6 flex text-lg ease-in-out will-change-transform md:hidden",
+            "my-4 flex flex-col text-base ease-in-out will-change-transform md:hidden",
             open ? "" : "hidden",
           )}
         >
-          <ul className="space-y-4 font-medium">
+          <ul className="space-y-1 font-medium">
+            {/* Creations — expandable section */}
+            <li>
+              <button
+                onClick={() => setCreationsOpen(!creationsOpen)}
+                className="flex w-full items-center justify-between rounded-md px-2 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <span>Creations</span>
+                <IconChevronDown
+                  className={cx(
+                    "size-4 transition-transform duration-200",
+                    creationsOpen ? "rotate-180" : ""
+                  )}
+                />
+              </button>
+              {creationsOpen && (
+                <ul className="ml-4 mt-1 space-y-1 border-l border-gray-200 pl-3 dark:border-gray-700">
+                  <li onClick={() => setOpen(false)}>
+                    <Link
+                      href={siteConfig.baseLinks.cakes}
+                      className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+                    >
+                      Cakes
+                    </Link>
+                  </li>
+                  <li onClick={() => setOpen(false)}>
+                    <Link
+                      href={siteConfig.baseLinks.cupcakes}
+                      className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+                    >
+                      Cupcakes
+                    </Link>
+                  </li>
+                  <li onClick={() => setOpen(false)}>
+                    <Link
+                      href={siteConfig.baseLinks.numberCakes}
+                      className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+                    >
+                      Number Cakes
+                    </Link>
+                  </li>
+                  <li onClick={() => setOpen(false)}>
+                    <Link
+                      href={siteConfig.baseLinks.pure}
+                      className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+                    >
+                      PURE by Peory
+                    </Link>
+                  </li>
+                  <li onClick={() => setOpen(false)}>
+                    <Link
+                      href={siteConfig.baseLinks.collections}
+                      className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+                    >
+                      Collections
+                    </Link>
+                  </li>
+                  <li onClick={() => setOpen(false)}>
+                    <Link
+                      href={siteConfig.baseLinks.pricing}
+                      className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+                    >
+                      Pricing
+                    </Link>
+                  </li>
+                </ul>
+              )}
+            </li>
+
+            {/* Simple links */}
             <li onClick={() => setOpen(false)}>
-              <Link href={siteConfig.baseLinks.about}>About</Link>
+              <Link
+                href={siteConfig.baseLinks.wedding}
+                className="block rounded-md px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                Wedding
+              </Link>
             </li>
             <li onClick={() => setOpen(false)}>
-              <Link href={siteConfig.baseLinks.pricing}>Pricing</Link>
+              <Link
+                href={siteConfig.baseLinks.classes}
+                className="block rounded-md px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                Classes
+              </Link>
             </li>
             <li onClick={() => setOpen(false)}>
-              <Link href={siteConfig.baseLinks.changelog}>Changelog</Link>
+              <Link
+                href={siteConfig.baseLinks.howToOrder}
+                className="block rounded-md px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                How to Order
+              </Link>
+            </li>
+            <li onClick={() => setOpen(false)}>
+              <Link
+                href={siteConfig.baseLinks.faq}
+                className="block rounded-md px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                FAQ
+              </Link>
             </li>
           </ul>
         </nav>
