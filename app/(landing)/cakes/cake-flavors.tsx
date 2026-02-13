@@ -10,55 +10,64 @@ const flavors = [
   {
     id: "chocolate",
     title: "Chocolate",
-    description: "Valrhona chocolate cake with Valrhona chocolate ganache buttercream",
+    description:
+      "Valrhona chocolate cake with Valrhona chocolate ganache buttercream",
     image: "https://media.peorycake.com/chocolate.webp",
   },
   {
     id: "blueberry",
     title: "Blueberry Mascarpone",
-    description: "Genoise (sponge cake) with organic blueberry compote and mascarpone cream cheese frosting",
+    description:
+      "Genoise (sponge cake) with organic blueberry compote and mascarpone cream cheese frosting",
     image: "https://media.peorycake.com/blueberry.webp",
   },
   {
     id: "lemon",
     title: "Lemon",
-    description: "Organic lemon cake with organic lemon curd and lemon curd buttercream",
+    description:
+      "Organic lemon cake with organic lemon curd and lemon curd buttercream",
     image: "https://media.peorycake.com/lemon.webp",
   },
   {
     id: "caramel",
     title: "Caramel",
-    description: "Madagascar Vanilla bean Cake, Homemade Caramel Sauce buttercream",
+    description:
+      "Madagascar Vanilla bean Cake, Homemade Caramel Sauce buttercream",
     image: "https://media.peorycake.com/caramel.webp",
   },
   {
     id: "matcha",
     title: "Matcha",
-    description: "Organic matcha cake with Organic matcha crème anglaise buttercream",
+    description:
+      "Organic matcha cake with Organic matcha crème anglaise buttercream",
     image: "https://media.peorycake.com/greentea.webp",
   },
   {
     id: "vanilla",
     title: "Vanilla",
-    description: "Madagascar Vanilla bean Cake with Madagascar vanilla bean pâte à bombe buttercream",
+    description:
+      "Madagascar Vanilla bean Cake with Madagascar vanilla bean pâte à bombe buttercream",
     image: "https://media.peorycake.com/vanilla.webp",
   },
   {
     id: "strawberry",
     title: "Strawberry",
-    description: "Madagascar Vanilla bean Cake with organic strawberry compote and Madagascar vanilla bean pâte à bombe buttercream",
+    description:
+      "Madagascar Vanilla bean Cake with organic strawberry compote and Madagascar vanilla bean pâte à bombe buttercream",
     image: "https://media.peorycake.com/strawberry.webp",
   },
   {
     id: "raspberry",
     title: "Raspberry",
-    description: "Madagascar Vanilla bean Cake with organic raspberry compote and organic raspberry crème anglaise buttercream",
+    description:
+      "Madagascar Vanilla bean Cake with organic raspberry compote and organic raspberry crème anglaise buttercream",
     image: "https://media.peorycake.com/raspberry.webp",
   },
   {
     id: "earlgrey",
     title: "Earl Grey",
-    description: "Taylors of Harrogate Earl Grey Cake with Earl Grey jam and Earl Grey pâte à bombe buttercream",
+    description:
+      "Taylors of Harrogate Earl Grey Cake with Earl Grey jam and Earl Grey pâte à bombe buttercream",
     image: "https://media.peorycake.com/earlgrey.webp",
   },
 ]
@@ -105,11 +114,11 @@ function FlavorCard({
 // ---------------------------------------------------------------------------
 
 export function CakeFlavors() {
-  // align: "end" ensures the cards stay pinned to the right side of the container initially
-  const [emblaRef] = useEmblaCarousel({ 
-    align: "end", 
+  const [emblaRef] = useEmblaCarousel({
+    align: "start",
     containScroll: "trimSnaps",
-    dragFree: true 
+    dragFree: true,
+    direction: "rtl",
   })
 
   return (
@@ -134,10 +143,9 @@ export function CakeFlavors() {
         }
         .embla-flavors__container {
           display: flex;
-          flex-direction: row-reverse; /* Reverses the order so the first items are on the right */
           gap: 1.5rem;
           padding-right: max(1.5rem, calc((100vw - 1152px) / 2 + 1.5rem));
-          padding-left: 2rem;
+          padding-left: max(1.5rem, calc((100vw - 1152px) / 2 + 1.5rem));
         }
       `}</style>
 
@@ -148,23 +156,19 @@ export function CakeFlavors() {
               Flavors & Fillings
             </h2>
             <p className="ml-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-              Our cakes offer classic and unique flavors, made with premium
-              ingredients for an unforgettable taste.
+        Our cakes offer classic and unique flavors, made with premium ingredients.
             </p>
           </div>
         </div>
 
-        <div className="embla-flavors" ref={emblaRef}>
+        <div className="embla-flavors" ref={emblaRef} dir="rtl">
           <div className="embla-flavors__container pb-12">
             {flavors.map((flavor, i) => (
-              <FlavorCard
-                key={flavor.id}
-                flavor={flavor}
-                index={i}
-              />
+              <div key={flavor.id} dir="ltr">
+                <FlavorCard flavor={flavor} index={i} />
+              </div>
             ))}
-            {/* Left-side buffer to allow the last card to bleed off properly */}
-            <div className="w-[10vw] flex-none" />
+            <div className="w-10 flex-none sm:w-20" />
           </div>
         </div>
       </section>

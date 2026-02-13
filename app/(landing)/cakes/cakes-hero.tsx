@@ -228,7 +228,7 @@ export function CakesHero() {
         }
       `}</style>
 
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden pb-24 sm:pb-32">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-rose-100/40 via-transparent to-transparent dark:from-rose-950/20" />
 
         <div className="relative mx-auto max-w-6xl px-4 pt-36 sm:px-6 sm:pt-44 lg:px-8">

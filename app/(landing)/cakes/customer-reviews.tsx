@@ -64,13 +64,13 @@ export function CustomerReviews() {
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi])
 
   return (
-    <section className="py-24 sm:py-32 overflow-hidden bg-transparent">
+    <section className="pt-24 sm:pt-32 overflow-hidden bg-transparent">
       {/* Centered Header */}
-      <div className="mx-auto max-w-3xl px-6 text-center mb-16 sm:mb-20">
+      <div className="mx-auto max-w-3xl px-6 text-center mb-12 sm:mb-16">
         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
           Customer Reviews
         </h2>
-        <p className="mt-4 text-base text-muted-foreground sm:text-lg">
+        <p className="mt-6 text-lg text-muted-foreground">
           The sweetest proof of our dedication to every celebration.
         </p>
       </div>

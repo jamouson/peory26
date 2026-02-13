@@ -100,7 +100,7 @@ export function CakeCollections() {
       `}</style>
 
       {/* Changed bg-background to bg-transparent */}
-      <section className="py-24 sm:py-32 overflow-hidden bg-transparent">
+      <section className="pt-24 sm:pt-32 overflow-hidden bg-transparent">
         <div className="mx-auto max-w-6xl px-6 lg:px-8 mb-12 sm:mb-16">
            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
             Cake Collections
