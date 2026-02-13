@@ -10,8 +10,8 @@
 import type { Metadata } from "next"
 import { CakesHero } from "./cakes-hero"
 import { CakeCollections } from "./cake-collections"
-import { CakeFlavors } from "./cake-flavors"
-import { CustomerReviews } from "./customer-reviews"
+import { CakeFlavors } from "../flavors"
+import { CustomerReviews } from "../customer-reviews"
 import Cta from "@/components/ui/Cta"
 
 export const metadata: Metadata = {

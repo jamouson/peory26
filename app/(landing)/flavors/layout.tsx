@@ -1,12 +1,11 @@
 // =============================================================================
-// File: src/app/(landing)/cakes/layout.tsx
-// Description: Nested layout for /cakes — overrides the parent wave
-//   background with the warm marble variant.
+// File: src/app/(landing)/flavors/layout.tsx
+// Description: Nested layout for /flavors — warm marble variant.
 // =============================================================================
 
 import { MarbleBackground } from "@/components/ui/marble-background"
 
-export default function CakesLayout({
+export default function FlavorsLayout({
   children,
 }: {
   children: React.ReactNode

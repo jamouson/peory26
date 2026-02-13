@@ -10,8 +10,8 @@
 import type { Metadata } from "next"
 import { CupcakesHero } from "./cupcakes-hero"
 import { CupcakeCollections } from "./cupcake-collections"
-import { CupcakeFlavors } from "./cupcake-flavors"
-import { CustomerReviews } from "./customer-reviews"
+import { CakeFlavors } from "../flavors"
+import { CustomerReviews } from "../customer-reviews"
 import Cta from "@/components/ui/Cta"
 
 export const metadata: Metadata = {
@@ -25,7 +25,7 @@ export default function CupcakesPage() {
     <main className="flex flex-col overflow-hidden">
       <CupcakesHero />
       <CupcakeCollections />
-      <CupcakeFlavors />
+      <CakeFlavors />
       <CustomerReviews />
       <Cta />
     </main>

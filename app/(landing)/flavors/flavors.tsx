@@ -1,11 +1,17 @@
 // =============================================================================
-// File: src/app/(landing)/cupcakes/cupcake-flavors.tsx
-// Description: RTL-scrolling horizontal carousel of cupcake flavors using Embla.
-//   Spacing optimized for consistent vertical rhythm across all breakpoints.
+// File: src/app/(landing)/flavors/flavors.tsx
+// Description: Centered horizontal carousel of flavors using Embla.
+//   FIX 1: Container layout uses Tailwind classes (flex, gap) instead of a
+//          <style> tag — prevents FOUT where items flash vertically before
+//          the style tag is parsed.
+//   FIX 2: Carousel starts invisible (opacity-0) and fades in only after
+//          Embla has initialized and snapped to startIndex — prevents the
+//          visible jump from left-aligned to centered.
 // =============================================================================
 
 "use client"
 
+import { useState, useEffect } from "react"
 import useEmblaCarousel from "embla-carousel-react"
 
 // ---------------------------------------------------------------------------
@@ -84,16 +90,11 @@ const flavors = [
 
 function FlavorCard({
   flavor,
-  index,
 }: {
   flavor: (typeof flavors)[0]
-  index: number
 }) {
   return (
-    <div
-      className="flavor-card group/flavor relative h-[400px] w-[280px] flex-none overflow-hidden rounded-[2.5rem] border border-white/10 sm:h-[500px] sm:w-[380px]"
-      style={{ animationDelay: `${index * 80}ms` }}
-    >
+    <div className="group/flavor relative h-[400px] w-[280px] flex-none overflow-hidden rounded-[2.5rem] border border-white/10 sm:h-[500px] sm:w-[380px]">
       <img
         src={flavor.image}
         alt={flavor.title}
@@ -119,66 +120,55 @@ function FlavorCard({
 // Main Section
 // ---------------------------------------------------------------------------
 
-export function CupcakeFlavors() {
-  const [emblaRef] = useEmblaCarousel({
-    align: "start",
-    containScroll: "trimSnaps",
+export function Flavors() {
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: "center",
+    containScroll: false,
     dragFree: true,
-    direction: "rtl",
+    startIndex: Math.floor(flavors.length / 2),
   })
 
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    if (!emblaApi) return
+    // Embla has initialized and snapped to startIndex — safe to show
+    const onInit = () => setReady(true)
+    emblaApi.on("init", onInit)
+    // In case init already fired
+    if (emblaApi.internalEngine()) setReady(true)
+    return () => {
+      emblaApi.off("init", onInit)
+    }
+  }, [emblaApi])
+
   return (
-    <>
-      <style>{`
-        .flavor-card {
-          opacity: 0;
-          animation: slide-from-left 1s cubic-bezier(0.2, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes slide-from-left {
-          from { opacity: 0; transform: translateX(-120px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-
-        .embla-flavors {
-          overflow: hidden;
-          cursor: grab;
-        }
-        .embla-flavors:active {
-          cursor: grabbing;
-        }
-        .embla-flavors__container {
-          display: flex;
-          gap: 1.5rem;
-          padding-right: max(1.5rem, calc((100vw - 1152px) / 2 + 1.5rem));
-          padding-left: max(1.5rem, calc((100vw - 1152px) / 2 + 1.5rem));
-        }
-      `}</style>
-
-      <section className="pt-20 sm:pt-24 pb-8 sm:pb-12 overflow-hidden bg-transparent">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mb-10 sm:mb-14">
-          <div className="text-right">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
-              Flavors & Fillings
-            </h2>
-            <p className="ml-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-              Our cupcakes offer classic and unique flavors, made with premium
-              ingredients.
-            </p>
-          </div>
+    <section className="pt-36 sm:pt-44 pb-8 sm:pb-12 overflow-hidden bg-transparent">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mb-10 sm:mb-14">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
+            Flavors & Fillings
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
+            Our cakes offer classic and unique flavors, made with premium
+            ingredients for an unforgettable taste. We use fresh, high-quality
+            buttercream and fillings in every creation.
+          </p>
         </div>
+      </div>
 
-        <div className="embla-flavors" ref={emblaRef} dir="rtl">
-          <div className="embla-flavors__container pb-12">
-            {flavors.map((flavor, i) => (
-              <div key={flavor.id} dir="ltr">
-                <FlavorCard flavor={flavor} index={i} />
-              </div>
-            ))}
-            <div className="w-10 flex-none sm:w-20" />
-          </div>
+      <div
+        ref={emblaRef}
+        className={`overflow-hidden cursor-grab active:cursor-grabbing transition-opacity duration-500 ${
+          ready ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <div className="flex gap-6 pb-12">
+          {flavors.map((flavor) => (
+            <FlavorCard key={flavor.id} flavor={flavor} />
+          ))}
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   )
 }

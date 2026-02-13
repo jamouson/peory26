@@ -260,7 +260,7 @@ export function Navigation() {
                           >
                             Browse all collections
                           </ListItem>
-                          <ListItem href="#flavors" title="Flavors & Fillings">
+                          <ListItem href="/flavors" title="Flavors & Fillings">
                             Available options
                           </ListItem>
                           <ListItem href={siteConfig.baseLinks.pricing} title="Pricing">

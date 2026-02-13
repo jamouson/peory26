@@ -10,8 +10,8 @@
 import type { Metadata } from "next"
 import { NumberCakesHero } from "./number-cakes-hero"
 import { NumberCakeCollections } from "./number-cake-collections"
-import { NumberCakeFlavors } from "./number-cake-flavors"
-import { CustomerReviews } from "./customer-reviews"
+import { CakeFlavors } from "../flavors"
+import { CustomerReviews } from "../customer-reviews"
 import Cta from "@/components/ui/Cta"
 
 export const metadata: Metadata = {
@@ -25,7 +25,7 @@ export default function NumberCakesPage() {
     <main className="flex flex-col overflow-hidden">
       <NumberCakesHero />
       <NumberCakeCollections />
-      <NumberCakeFlavors />
+      <CakeFlavors />
       <CustomerReviews />
       <Cta />
     </main>
