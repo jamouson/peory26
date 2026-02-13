@@ -1,3 +1,14 @@
+// =============================================================================
+// File: components/ui/Navbar.tsx
+// Description: Customer-facing navbar with shadcn NavigationMenu mega menu.
+//   "Creations" opens a multi-column dropdown panel with product categories.
+//   Wedding, Classes, FAQ are simple links. How to Order is the CTA.
+//   Logo starts large (w-44) and shrinks (w-28) on scroll.
+//   Logo has viewTransitionName for cross-page glide animation to auth pages.
+//   FIX: Mobile overflow — logo yields (no shrink-0), actions stay rigid,
+//        no overflow-x-hidden so dropdowns aren't clipped.
+// =============================================================================
+
 "use client"
 
 import { siteConfig } from "@/app/siteConfig"
@@ -38,8 +49,6 @@ import {
   IconChevronDown,
 } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
-
-// ... [UserDropdown and ListItem components remain unchanged] ...
 
 // =============================================================================
 // UserDropdown
@@ -97,7 +106,7 @@ function UserDropdown() {
 }
 
 // =============================================================================
-// ListItem
+// ListItem — reusable link item inside the mega menu
 // =============================================================================
 const ListItem = React.forwardRef<
   React.ComponentRef<"a">,
@@ -136,7 +145,7 @@ const ListItem = React.forwardRef<
 ListItem.displayName = "ListItem"
 
 // =============================================================================
-// Navigation
+// Navigation — main exported component
 // =============================================================================
 export function Navigation() {
   const scrolled = useScroll(15)
@@ -164,27 +173,23 @@ export function Navigation() {
         "fixed inset-x-3 top-4 z-50 mx-auto flex max-w-6xl transform-gpu animate-slide-down-fade justify-center rounded-xl border border-transparent px-3 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1.03)] will-change-transform",
         open ? "h-auto" : scrolled ? "h-14" : "h-16",
         scrolled ? "py-2" : "py-3",
-        // Kept overflow-hidden here for the header container shape, but ensure inner content isn't clipped incorrectly
         "overflow-hidden md:overflow-visible",
         scrolled || open
           ? "border-gray-200/50 bg-white/80 shadow-md backdrop-blur-xl dark:border-white/10 dark:bg-gray-950/80"
           : "bg-white/0 dark:bg-gray-950/0",
       )}
     >
-      {/* FIX APPLIED: Removed overflow-x-hidden here. It was causing the side-scroll/clipping issue. */}
-      {/* min-w-0 ensures the flex children can shrink below their content size if needed */}
+      {/* min-w-0 lets flex children shrink below content size — NO overflow-x-hidden */}
       <div className="w-full min-w-0">
         <div className="flex items-center justify-between">
-          
-          {/* ─── Logo ─── */}
-          {/* FIX APPLIED: Removed 'shrink-0'. Now it can shrink on small screens. */}
+          {/* ─── Logo (shrinks on scroll) — tagged for view transition ─── */}
+          {/* NO shrink-0 — logo is the flex item that yields on small screens */}
           <Link href="/" aria-label="Home" className="min-w-0">
             <span className="sr-only">Peory Cake</span>
             <div style={{ viewTransitionName: "peory-logo" }}>
               <DatabaseLogo
                 className={cx(
                   "transition-all duration-300 ease-out",
-                  // FIX APPLIED: Added 'max-w-full' so the SVG scales down if the parent Link shrinks
                   "max-w-full",
                   scrolled
                     ? "h-7 w-auto sm:h-8 md:h-auto md:w-28"
@@ -196,16 +201,16 @@ export function Navigation() {
 
           {/* ─── Desktop Navigation (mega menu) ─── */}
           <div className="hidden md:flex md:items-center md:justify-center md:flex-1">
-             {/* ... [NavigationMenu code same as before] ... */}
             <NavigationMenu>
               <NavigationMenuList>
-                {/* ── Creations ── */}
+                {/* ── Creations (mega menu dropdown) ── */}
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="bg-transparent text-sm font-medium text-gray-700 hover:bg-gray-100/80 hover:text-gray-900 data-[state=open]:bg-gray-100/80 dark:text-gray-300 dark:hover:bg-gray-800/60 dark:hover:text-gray-100 dark:data-[state=open]:bg-gray-800/60">
                     Creations
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="grid w-[600px] gap-3 p-4 md:grid-cols-[1fr_0.75fr_0.75fr]">
+                      {/* Column 1: Featured Cakes card */}
                       <NavigationMenuLink asChild>
                         <Link
                           href={siteConfig.baseLinks.cakes}
@@ -224,6 +229,7 @@ export function Navigation() {
                         </Link>
                       </NavigationMenuLink>
 
+                      {/* Column 2: Products + Collections */}
                       <div className="space-y-1">
                         <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                           Products
@@ -241,6 +247,7 @@ export function Navigation() {
                         </ul>
                       </div>
 
+                      {/* Column 3: Collections + Info */}
                       <div className="space-y-1">
                         <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                           Browse
@@ -265,7 +272,7 @@ export function Navigation() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
 
-                {/* ── Links ── */}
+                {/* ── Simple links ── */}
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild>
                     <Link
@@ -279,6 +286,7 @@ export function Navigation() {
                     </Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
+
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild>
                     <Link
@@ -292,6 +300,7 @@ export function Navigation() {
                     </Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
+
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild>
                     <Link
@@ -305,6 +314,7 @@ export function Navigation() {
                     </Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
+
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild>
                     <Link
@@ -330,6 +340,7 @@ export function Navigation() {
               <UserDropdown />
             </SignedIn>
             <SignedOut>
+              {/* TransitionLink triggers view transition when navigating to auth */}
               <TransitionLink href="/sign-in">
                 <Button>Inquiry Form</Button>
               </TransitionLink>
@@ -337,7 +348,7 @@ export function Navigation() {
           </div>
 
           {/* ─── Mobile right side ─── */}
-          {/* This stays shrink-0 to prevent buttons from squishing */}
+          {/* shrink-0 keeps buttons rigid — logo yields instead */}
           <div className="flex shrink-0 items-center gap-x-1.5 md:hidden">
             <ModeToggle />
             <SignedIn>
@@ -376,6 +387,7 @@ export function Navigation() {
           )}
         >
           <ul className="space-y-1 font-medium">
+            {/* Creations — expandable section */}
             <li>
               <button
                 onClick={() => setCreationsOpen(!creationsOpen)}
@@ -392,37 +404,89 @@ export function Navigation() {
               {creationsOpen && (
                 <ul className="ml-4 mt-1 space-y-1 border-l border-gray-200 pl-3 dark:border-gray-700">
                   <li onClick={() => setOpen(false)}>
-                    <Link href={siteConfig.baseLinks.cakes} className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100">Cakes</Link>
+                    <Link
+                      href={siteConfig.baseLinks.cakes}
+                      className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+                    >
+                      Cakes
+                    </Link>
                   </li>
                   <li onClick={() => setOpen(false)}>
-                    <Link href={siteConfig.baseLinks.cupcakes} className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100">Cupcakes</Link>
+                    <Link
+                      href={siteConfig.baseLinks.cupcakes}
+                      className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+                    >
+                      Cupcakes
+                    </Link>
                   </li>
                   <li onClick={() => setOpen(false)}>
-                    <Link href={siteConfig.baseLinks.numberCakes} className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100">Number Cakes</Link>
+                    <Link
+                      href={siteConfig.baseLinks.numberCakes}
+                      className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+                    >
+                      Number Cakes
+                    </Link>
                   </li>
                   <li onClick={() => setOpen(false)}>
-                    <Link href={siteConfig.baseLinks.pure} className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100">PURE by Peory</Link>
+                    <Link
+                      href={siteConfig.baseLinks.pure}
+                      className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+                    >
+                      PURE by Peory
+                    </Link>
                   </li>
                   <li onClick={() => setOpen(false)}>
-                    <Link href={siteConfig.baseLinks.collections} className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100">Collections</Link>
+                    <Link
+                      href={siteConfig.baseLinks.collections}
+                      className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+                    >
+                      Collections
+                    </Link>
                   </li>
                   <li onClick={() => setOpen(false)}>
-                    <Link href={siteConfig.baseLinks.pricing} className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100">Pricing</Link>
+                    <Link
+                      href={siteConfig.baseLinks.pricing}
+                      className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+                    >
+                      Pricing
+                    </Link>
                   </li>
                 </ul>
               )}
             </li>
+
+            {/* Simple links */}
             <li onClick={() => setOpen(false)}>
-              <Link href={siteConfig.baseLinks.wedding} className="block rounded-md px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-800">Wedding</Link>
+              <Link
+                href={siteConfig.baseLinks.wedding}
+                className="block rounded-md px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                Wedding
+              </Link>
             </li>
             <li onClick={() => setOpen(false)}>
-              <Link href={siteConfig.baseLinks.classes} className="block rounded-md px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-800">Classes</Link>
+              <Link
+                href={siteConfig.baseLinks.classes}
+                className="block rounded-md px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                Classes
+              </Link>
             </li>
             <li onClick={() => setOpen(false)}>
-              <Link href={siteConfig.baseLinks.howToOrder} className="block rounded-md px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-800">How to Order</Link>
+              <Link
+                href={siteConfig.baseLinks.howToOrder}
+                className="block rounded-md px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                How to Order
+              </Link>
             </li>
             <li onClick={() => setOpen(false)}>
-              <Link href={siteConfig.baseLinks.faq} className="block rounded-md px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-800">FAQ</Link>
+              <Link
+                href={siteConfig.baseLinks.faq}
+                className="block rounded-md px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                FAQ
+              </Link>
             </li>
           </ul>
         </nav>

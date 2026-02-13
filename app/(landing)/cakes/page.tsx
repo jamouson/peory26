@@ -1,8 +1,10 @@
 // =============================================================================
 // File: src/app/(landing)/cakes/page.tsx
 // Description: Cakes landing page. Marble background provided by cakes layout.
-//   CTA is wrapped with reduced top margin since CustomerReviews now has proper
-//   bottom padding — prevents the 224px dead zone on desktop.
+//   FIX: Wrapped in <main className="flex flex-col overflow-hidden"> to match
+//        home page and FAQ page patterns — prevents horizontal overflow from
+//        carousel animations (translateX) and embla 100vw padding calculations
+//        from breaking mobile zoom behavior.
 // =============================================================================
 
 import type { Metadata } from "next"
@@ -20,18 +22,12 @@ export const metadata: Metadata = {
 
 export default function CakesPage() {
   return (
-    <>
+    <main className="flex flex-col overflow-hidden">
       <CakesHero />
       <CakeCollections />
       <CakeFlavors />
       <CustomerReviews />
-      {/* ✅ Spacing wrapper — overrides Cta's own mt-32 sm:mt-56 which created
-          a 224px dead zone on desktop. Now that CustomerReviews has pb-16 sm:pb-20,
-          we only need a small nudge here. The wrapper's negative margin cancels out
-          the CTA's built-in top margin so the rhythm stays consistent. */}
-      <div className="-mt-24 sm:-mt-44">
-        <Cta />
-      </div>
-    </>
+      <Cta />
+    </main>
   )
 }
