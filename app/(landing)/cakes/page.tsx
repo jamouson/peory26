@@ -1,4 +1,7 @@
-// src/app/(landing)/cakes/page.tsx
+// =============================================================================
+// File: src/app/(landing)/cakes/page.tsx
+// Description: Cakes landing page. Marble background provided by cakes layout.
+// =============================================================================
 
 import type { Metadata } from "next"
 import { CakesHero } from "./cakes-hero"
