@@ -74,7 +74,7 @@ function TierCard({
 // Main Section
 // ---------------------------------------------------------------------------
 
-export function CakeCollections() {
+export function CakeTiers() {
   const [emblaRef] = useEmblaCarousel({
     align: "start",
     containScroll: "trimSnaps",
@@ -98,7 +98,7 @@ export function CakeCollections() {
           overflow: hidden;
           cursor: grab;
         }
-        .embla:active {
+        .embla:active {From Concept to Centerpiece
           cursor: grabbing;
         }
         .embla__container {
@@ -109,11 +109,14 @@ export function CakeCollections() {
         }
       `}</style>
 
+      {/* ✅ Carousel section rhythm: pt-20 sm:pt-24 + pb-8 sm:pb-12 (embla adds its own pb-12 inside) */}
       <section className="pt-20 sm:pt-24 pb-8 sm:pb-12 overflow-hidden bg-transparent">
+        {/* ✅ px-4 on mobile matches hero, mb-10 sm:mb-14 consistent with other sections */}
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mb-10 sm:mb-14">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
             Cakes for Every Celebration
           </h2>
+          {/* ✅ mt-4 consistent heading grouping */}
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
             Whether you&apos;re planning an intimate ceremony or a lavish
             reception, we have the perfect cake size for your celebration. Our

@@ -5,25 +5,24 @@
 
 import CodeExample from "@/components/ui/CodeExample"
 import Cta from "@/components/ui/Cta"
-import Features from "@/components/ui/Features"
 import Hero from "./Hero"
 import { WeddingProcess } from "./wedding-process"
 import LogoCloud from "@/components/ui/LogoCloud"
-import { CakeCollections } from "./cake-collections"
+import { CakeTiers } from "./cake-tiers"
 import { CakeFlavors } from "../flavors"
+import { CustomerReviews } from "../customer-reviews"
 
 export default function Home() {
   return (
     <main className="flex flex-col overflow-hidden">
       <Hero />
       <LogoCloud />
-    
-      <CakeCollections />
+      <CakeTiers />
            <WeddingProcess />
            <CakeFlavors />
       <CodeExample />
-     
-      <Features />
+     <CustomerReviews />
+
       <Cta />
     </main>
   )

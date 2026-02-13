@@ -150,9 +150,9 @@ function MockupDesign() {
           </div>
         ))}
       </div>
-      <div className="mt-auto p-3 bg-muted/20 border-t border-border/40">
-        <div className="h-24 w-full rounded-md border-2 border-dashed border-border/50 flex items-center justify-center">
-            <Sparkles className="h-5 w-5 text-muted-foreground/30" />
+      <div className="mt-auto border-t border-border/40 bg-muted/20 p-3">
+        <div className="flex h-24 w-full items-center justify-center rounded-md border-2 border-dashed border-border/50">
+          <Sparkles className="h-5 w-5 text-muted-foreground/30" />
         </div>
       </div>
     </div>
@@ -171,15 +171,15 @@ function MockupDelivery() {
   ]
 
   return (
-    <div className="flex h-full w-full flex-col sm:flex-row overflow-hidden rounded-t-xl border border-b-0 border-border/50 bg-card">
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-t-xl border border-b-0 border-border/50 bg-card sm:flex-row">
       {/* Tracker: Stacks on mobile */}
-      <div className="flex-1 border-b sm:border-b-0 sm:border-r border-border/40 p-4">
+      <div className="flex-1 border-b border-border/40 p-4 sm:border-b-0 sm:border-r">
         <div className="mb-3 flex items-center gap-2">
           <Package className="h-3.5 w-3.5 text-brand-500" />
-          <span className="text-xs font-semibold text-foreground whitespace-nowrap">Order #2048</span>
+          <span className="whitespace-nowrap text-xs font-semibold text-foreground">Order #2048</span>
         </div>
         <div className="space-y-3">
-          {steps.map((s, i) => (
+          {steps.map((s) => (
             <div key={s.label} className="flex items-center gap-2.5">
               <div className={`flex h-4 w-4 items-center justify-center rounded-full ${s.done ? "bg-brand-500" : "border-2 border-border"}`}>
                 {s.done && <CircleCheckBig className="h-2.5 w-2.5 text-white" />}
@@ -193,19 +193,19 @@ function MockupDelivery() {
       </div>
 
       {/* Details: Stacks on mobile */}
-      <div className="w-full sm:w-48 p-4 bg-muted/5">
+      <div className="w-full bg-muted/5 p-4 sm:w-48">
         <div className="space-y-3">
           <div className="flex items-start gap-2">
-            <MapPin className="h-3 w-3 text-brand-500 mt-0.5" />
+            <MapPin className="mt-0.5 h-3 w-3 text-brand-500" />
             <div className="text-[10px] leading-tight">
-                <div className="font-medium">The Estate</div>
-                <div className="text-muted-foreground">Alpine, NJ</div>
+              <div className="font-medium">The Estate</div>
+              <div className="text-muted-foreground">Alpine, NJ</div>
             </div>
           </div>
           <div className="flex items-start gap-2">
-            <Clock className="h-3 w-3 text-brand-500 mt-0.5" />
+            <Clock className="mt-0.5 h-3 w-3 text-brand-500" />
             <div className="text-[10px] leading-tight">
-                <div className="font-medium">Setup 3:00 PM</div>
+              <div className="font-medium">Setup 3:00 PM</div>
             </div>
           </div>
         </div>
@@ -245,32 +245,36 @@ function BentoCard({ title, description, className, children }: BentoCardProps) 
 
 export function WeddingProcess() {
   return (
-    <section className="bg-transparent py-16 sm:py-24 lg:py-32">
-      <div className="mx-auto max-w-6xl px-6 lg:px-8">
-        <div className="animate-fade-up text-center mb-14 sm:mb-20">
+    // ✅ py-16 sm:py-24 lg:py-32 → pt-20 sm:pt-24 pb-16 sm:pb-20
+    //    Non-carousel section pattern — consistent with CustomerReviews.
+    //    Removed the lg:py-32 third breakpoint that was unique to this component.
+    <section className="bg-transparent pt-20 sm:pt-24 pb-16 sm:pb-20">
+      {/* ✅ px-6 → px-4 sm:px-6 (mobile padding consistency with all other sections) */}
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        {/* ✅ mb-14 sm:mb-20 → mb-10 sm:mb-14 (consistent with all other section headers) */}
+        <div className="animate-fade-up mb-10 text-center sm:mb-14">
           <span className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600 dark:text-brand-400">
             Our Process
           </span>
           <h2 className="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
             From Concept to Centerpiece
           </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base sm:text-lg text-muted-foreground">
+          {/* ✅ mt-5 → mt-4 (consistent heading-to-subtext grouping) */}
+          <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
             Creating your perfect wedding cake is a collaborative journey.
           </p>
         </div>
 
-        {/* Optimized Responsive Grid */}
+        {/* Bento Grid */}
         <div
           className="animate-fade-up grid grid-cols-1 gap-4 sm:grid-cols-3 sm:grid-rows-[auto_auto]"
-          style={{
-            animationDelay: "150ms",
-          }}
+          style={{ animationDelay: "150ms" }}
         >
           {/* Consultation */}
           <BentoCard
             title="Consultation"
             description="Personalized design discussion via email to explore your wedding theme."
-            className="sm:[grid-area:1/1/2/2] h-[320px] sm:h-auto"
+            className="h-[320px] sm:h-auto sm:[grid-area:1/1/2/2]"
           >
             <MockupConsultation />
           </BentoCard>
@@ -279,7 +283,7 @@ export function WeddingProcess() {
           <BentoCard
             title="Tasting"
             description="Experience our signature flavors with our curated tasting box."
-            className="sm:[grid-area:1/2/2/3] h-[320px] sm:h-auto"
+            className="h-[320px] sm:h-auto sm:[grid-area:1/2/2/3]"
           >
             <MockupTasting />
           </BentoCard>
@@ -288,7 +292,7 @@ export function WeddingProcess() {
           <BentoCard
             title="Design"
             description="A custom design that captures your unique wedding style."
-            className="sm:row-span-2 sm:[grid-area:1/3/3/4] h-[380px] sm:h-auto"
+            className="h-[380px] sm:row-span-2 sm:h-auto sm:[grid-area:1/3/3/4]"
           >
             <MockupDesign />
           </BentoCard>
@@ -297,7 +301,7 @@ export function WeddingProcess() {
           <BentoCard
             title="Delivery"
             description="Professional delivery and setup at your venue for a picture-perfect centerpiece."
-            className="sm:col-span-2 sm:[grid-area:2/1/3/3] min-h-[300px] sm:h-auto"
+            className="min-h-[300px] sm:col-span-2 sm:h-auto sm:[grid-area:2/1/3/3]"
           >
             <MockupDelivery />
           </BentoCard>
