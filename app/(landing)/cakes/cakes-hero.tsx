@@ -1,5 +1,7 @@
 // =============================================================================
 // File: src/app/(landing)/cakes/cakes-hero.tsx
+// Description: Hero section for the cakes landing page with occasion cards.
+//   Spacing optimized for consistent vertical rhythm across all breakpoints.
 // =============================================================================
 
 "use client"
@@ -52,8 +54,7 @@ const cakeCategories: CakeCategory[] = [
   {
     id: "anniversaries",
     title: "Anniversaries",
-    description:
-      "Anniversary cakes that reflect your journey together.",
+    description: "Anniversary cakes that reflect your journey together.",
     icon: Sparkles,
     accent: "text-violet-300",
   },
@@ -228,7 +229,8 @@ export function CakesHero() {
         }
       `}</style>
 
-      <section className="relative overflow-hidden pb-24 sm:pb-32">
+      {/* ✅ pb-24 sm:pb-32 → pb-16 sm:pb-20 (reduces Hero→Collections gap) */}
+      <section className="relative overflow-hidden pb-16 sm:pb-20">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-rose-100/40 via-transparent to-transparent dark:from-rose-950/20" />
 
         <div className="relative mx-auto max-w-6xl px-4 pt-36 sm:px-6 sm:pt-44 lg:px-8">
@@ -246,7 +248,7 @@ export function CakesHero() {
 
           {/* Heading */}
           <div
-            className="animate-fade-up mt-10 text-center sm:mt-12"
+            className="animate-fade-up mt-8 text-center sm:mt-10"
             style={{ animationDelay: "100ms" }}
           >
             <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
@@ -257,7 +259,8 @@ export function CakesHero() {
               </span>
             </h1>
 
-            <p className="mx-auto mt-6 max-w-3xl text-lg leading-relaxed text-muted-foreground sm:mt-8">
+            {/* ✅ mt-6 sm:mt-8 → mt-5 sm:mt-6 (tighter heading-to-subtext) */}
+            <p className="mx-auto mt-5 max-w-3xl text-lg leading-relaxed text-muted-foreground sm:mt-6">
               From intimate celebrations to grand weddings, each PEORY cake is a
               work of art — baked fresh with premium ingredients and decorated
               with meticulous attention to detail.
@@ -280,9 +283,9 @@ export function CakesHero() {
             </Link>
           </div>
 
-          {/* Trust Indicators */}
+          {/* ✅ Trust Indicators — mt-16 sm:mt-20 → mt-12 sm:mt-16 */}
           <div
-            className="animate-fade-up mt-16 flex items-center justify-center gap-8 sm:mt-20 sm:gap-12"
+            className="animate-fade-up mt-12 flex items-center justify-center gap-8 sm:mt-16 sm:gap-12"
             style={{ animationDelay: "300ms" }}
           >
             {trustIndicators.map((item) => (
@@ -297,8 +300,8 @@ export function CakesHero() {
             ))}
           </div>
 
-          {/* Occasion Cards */}
-          <div className="mx-auto mt-16 flex max-w-6xl flex-col gap-4 sm:mt-20">
+          {/* ✅ Occasion Cards — mt-16 sm:mt-20 → mt-12 sm:mt-16 */}
+          <div className="mx-auto mt-12 flex max-w-6xl flex-col gap-4 sm:mt-16">
             <CategoryCard
               category={weddingCard}
               className="h-72 sm:h-96"

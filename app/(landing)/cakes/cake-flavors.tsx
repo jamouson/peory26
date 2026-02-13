@@ -1,3 +1,9 @@
+// =============================================================================
+// File: src/app/(landing)/cakes/cake-flavors.tsx
+// Description: RTL-scrolling horizontal carousel of cake flavors using Embla.
+//   Spacing optimized for consistent vertical rhythm across all breakpoints.
+// =============================================================================
+
 "use client"
 
 import useEmblaCarousel from "embla-carousel-react"
@@ -149,14 +155,18 @@ export function CakeFlavors() {
         }
       `}</style>
 
-      <section className="py-24 sm:py-32 overflow-hidden bg-transparent">
-        <div className="mx-auto max-w-6xl px-6 lg:px-8 mb-12 sm:mb-16">
+      {/* ✅ py-24 sm:py-32 → pt-20 sm:pt-24 pb-8 sm:pb-12 (eliminates double-padding with embla pb-12) */}
+      <section className="pt-20 sm:pt-24 pb-8 sm:pb-12 overflow-hidden bg-transparent">
+        {/* ✅ px-6 → px-4 sm:px-6 (matches hero mobile padding), mb-12 sm:mb-16 → mb-10 sm:mb-14 */}
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mb-10 sm:mb-14">
           <div className="text-right">
             <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
               Flavors & Fillings
             </h2>
-            <p className="ml-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-        Our cakes offer classic and unique flavors, made with premium ingredients.
+            {/* ✅ mt-6 → mt-4 (tighter heading grouping) */}
+            <p className="ml-auto mt-4 max-w-2xl text-lg text-muted-foreground">
+              Our cakes offer classic and unique flavors, made with premium
+              ingredients.
             </p>
           </div>
         </div>

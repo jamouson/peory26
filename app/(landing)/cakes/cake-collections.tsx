@@ -1,3 +1,9 @@
+// =============================================================================
+// File: src/app/(landing)/cakes/cake-collections.tsx
+// Description: Horizontal carousel of yearly cake collections using Embla.
+//   Spacing optimized for consistent vertical rhythm across all breakpoints.
+// =============================================================================
+
 "use client"
 
 import Link from "next/link"
@@ -65,10 +71,10 @@ function CollectionCard({
 // ---------------------------------------------------------------------------
 
 export function CakeCollections() {
-  const [emblaRef] = useEmblaCarousel({ 
-    align: "start", 
+  const [emblaRef] = useEmblaCarousel({
+    align: "start",
     containScroll: "trimSnaps",
-    dragFree: true 
+    dragFree: true,
   })
 
   return (
@@ -99,14 +105,17 @@ export function CakeCollections() {
         }
       `}</style>
 
-      {/* Changed bg-background to bg-transparent */}
-      <section className="pt-24 sm:pt-32 overflow-hidden bg-transparent">
-        <div className="mx-auto max-w-6xl px-6 lg:px-8 mb-12 sm:mb-16">
-           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
+      {/* ✅ pt-24 sm:pt-32 → pt-20 sm:pt-24, added pb-8 sm:pb-12 (was missing) */}
+      <section className="pt-20 sm:pt-24 pb-8 sm:pb-12 overflow-hidden bg-transparent">
+        {/* ✅ px-6 → px-4 sm:px-6 (matches hero mobile padding), mb-12 sm:mb-16 → mb-10 sm:mb-14 */}
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 mb-10 sm:mb-14">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
             Cake Collections
           </h2>
-          <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
-            A closer look at the artistry and creativity of our cakes, year by year.
+          {/* ✅ mt-6 → mt-4 (tighter heading grouping) */}
+          <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
+            A closer look at the artistry and creativity of our cakes, year by
+            year.
           </p>
         </div>
 
@@ -120,7 +129,7 @@ export function CakeCollections() {
                 index={i}
               />
             ))}
-            {/* Added a small spacer at the end to maintain the bleed effect */}
+            {/* Spacer at the end to maintain the bleed effect */}
             <div className="w-10 flex-none sm:w-20" />
           </div>
         </div>
