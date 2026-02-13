@@ -1,8 +1,6 @@
-// =============================================================================
-// File: src/app/(landing)/cakes/cake-flavors.tsx
-// =============================================================================
-
 "use client"
+
+import useEmblaCarousel from "embla-carousel-react"
 
 // ---------------------------------------------------------------------------
 // Data
@@ -12,82 +10,57 @@ const flavors = [
   {
     id: "chocolate",
     title: "Chocolate",
-    description:
-      "Valrhona chocolate cake with Valrhona chocolate ganache buttercream",
+    description: "Valrhona chocolate cake with Valrhona chocolate ganache buttercream",
     image: "https://media.peorycake.com/chocolate.webp",
   },
   {
     id: "blueberry",
     title: "Blueberry Mascarpone",
-    description:
-      "Genoise (sponge cake) with organic blueberry compote and mascarpone cream cheese frosting",
+    description: "Genoise (sponge cake) with organic blueberry compote and mascarpone cream cheese frosting",
     image: "https://media.peorycake.com/blueberry.webp",
   },
   {
     id: "lemon",
     title: "Lemon",
-    description:
-      "Organic lemon cake with organic lemon curd and lemon curd buttercream",
+    description: "Organic lemon cake with organic lemon curd and lemon curd buttercream",
     image: "https://media.peorycake.com/lemon.webp",
   },
   {
     id: "caramel",
     title: "Caramel",
-    description:
-      "Madagascar Vanilla bean Cake, Homemade Caramel Sauce buttercream",
+    description: "Madagascar Vanilla bean Cake, Homemade Caramel Sauce buttercream",
     image: "https://media.peorycake.com/caramel.webp",
   },
   {
     id: "matcha",
     title: "Matcha",
-    description:
-      "Organic matcha cake with Organic matcha crème anglaise buttercream",
+    description: "Organic matcha cake with Organic matcha crème anglaise buttercream",
     image: "https://media.peorycake.com/greentea.webp",
   },
   {
     id: "vanilla",
     title: "Vanilla",
-    description:
-      "Madagascar Vanilla bean Cake with Madagascar vanilla bean pâte à bombe buttercream",
+    description: "Madagascar Vanilla bean Cake with Madagascar vanilla bean pâte à bombe buttercream",
     image: "https://media.peorycake.com/vanilla.webp",
   },
   {
     id: "strawberry",
     title: "Strawberry",
-    description:
-      "Madagascar Vanilla bean Cake with organic strawberry compote and Madagascar vanilla bean pâte à bombe buttercream",
+    description: "Madagascar Vanilla bean Cake with organic strawberry compote and Madagascar vanilla bean pâte à bombe buttercream",
     image: "https://media.peorycake.com/strawberry.webp",
   },
   {
     id: "raspberry",
     title: "Raspberry",
-    description:
-      "Madagascar Vanilla bean Cake with organic raspberry compote and organic raspberry crème anglaise buttercream",
+    description: "Madagascar Vanilla bean Cake with organic raspberry compote and organic raspberry crème anglaise buttercream",
     image: "https://media.peorycake.com/raspberry.webp",
   },
   {
     id: "earlgrey",
     title: "Earl Grey",
-    description:
-      "Taylors of Harrogate Earl Grey Cake with Earl Grey jam and Earl Grey pâte à bombe buttercream",
+    description: "Taylors of Harrogate Earl Grey Cake with Earl Grey jam and Earl Grey pâte à bombe buttercream",
     image: "https://media.peorycake.com/earlgrey.webp",
   },
-]
-
-// ---------------------------------------------------------------------------
-// Bento positions — 4-col grid, 3 rows
-// ---------------------------------------------------------------------------
-
-const bentoPositions = [
-  { colSpan: "sm:col-span-2", rowSpan: "sm:row-span-2", height: "h-64 sm:h-full" },
-  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-64 sm:h-full" },
-  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-64 sm:h-full" },
-  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-64 sm:h-full" },
-  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-64 sm:h-full" },
-  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-64 sm:h-full" },
-  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-64 sm:h-full" },
-  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-64 sm:h-full" },
-  { colSpan: "sm:col-span-1", rowSpan: "sm:row-span-1", height: "h-64 sm:h-full" },
 ]
 
 // ---------------------------------------------------------------------------
@@ -96,49 +69,30 @@ const bentoPositions = [
 
 function FlavorCard({
   flavor,
-  position,
   index,
 }: {
   flavor: (typeof flavors)[0]
-  position: (typeof bentoPositions)[0]
   index: number
 }) {
   return (
     <div
-      // Mobile: 'sticky' positioning. Desktop: 'static' (default grid behavior).
-      className={`flavor-card group/flavor relative overflow-hidden rounded-2xl border border-white/10 shadow-lg 
-        sticky sm:static 
-        ${position.colSpan} ${position.rowSpan} ${position.height}`}
-      style={{
-        // 1. Animation stagger
-        animationDelay: `${index * 60}ms`,
-        // 2. STACKING LOGIC (Mobile Only):
-        //    top: 6rem (base offset for navbar) + (index * 10px) (creates the visible stack)
-        //    zIndex: ensures later cards sit on top of earlier ones
-        top: `calc(6rem + ${index * 10}px)`,
-        zIndex: index + 10,
-      }}
+      className="flavor-card group/flavor relative h-[400px] w-[280px] flex-none overflow-hidden rounded-[2.5rem] border border-white/10 sm:h-[500px] sm:w-[380px]"
+      style={{ animationDelay: `${index * 80}ms` }}
     >
       <img
         src={flavor.image}
         alt={flavor.title}
         loading="lazy"
-        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out will-change-transform group-hover/flavor:scale-105"
+        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out pointer-events-none group-hover/flavor:scale-105"
       />
 
-      {/* Default — title at bottom */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-12 transition-opacity duration-300 group-hover/flavor:opacity-0">
-        <h3 className="text-lg font-bold tracking-tight text-white drop-shadow-md">
-          {flavor.title}
-        </h3>
-      </div>
+      <div className="absolute inset-0 bg-black/20 transition-opacity duration-300 pointer-events-none group-hover/flavor:bg-black/50" />
 
-      {/* Hover — full overlay with description */}
-      <div className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/70 to-black/20 p-5 opacity-0 transition-opacity duration-300 ease-out group-hover/flavor:opacity-100">
-        <h3 className="text-lg font-bold tracking-tight text-white">
+      <div className="relative z-10 flex h-full w-full flex-col justify-end p-6 sm:p-8">
+        <h3 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
           {flavor.title}
         </h3>
-        <p className="mt-2 text-sm leading-relaxed text-white/80">
+        <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-white/80 opacity-0 transition-opacity duration-300 group-hover/flavor:opacity-100">
           {flavor.description}
         </p>
       </div>
@@ -151,52 +105,67 @@ function FlavorCard({
 // ---------------------------------------------------------------------------
 
 export function CakeFlavors() {
+  // align: "end" ensures the cards stay pinned to the right side of the container initially
+  const [emblaRef] = useEmblaCarousel({ 
+    align: "end", 
+    containScroll: "trimSnaps",
+    dragFree: true 
+  })
+
   return (
     <>
       <style>{`
         .flavor-card {
           opacity: 0;
-          animation: fade-up 0.6s ease-out forwards;
+          animation: slide-from-left 1s cubic-bezier(0.2, 1, 0.3, 1) forwards;
         }
-        @keyframes fade-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+
+        @keyframes slide-from-left {
+          from { opacity: 0; transform: translateX(-120px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+
+        .embla-flavors {
+          overflow: hidden;
+          cursor: grab;
+        }
+        .embla-flavors:active {
+          cursor: grabbing;
+        }
+        .embla-flavors__container {
+          display: flex;
+          flex-direction: row-reverse; /* Reverses the order so the first items are on the right */
+          gap: 1.5rem;
+          padding-right: max(1.5rem, calc((100vw - 1152px) / 2 + 1.5rem));
+          padding-left: 2rem;
         }
       `}</style>
 
-      <section className="mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
-        {/* Section header */}
-        <div className="animate-fade-up text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Flavors & Fillings
-          </h2>
-          <p className="mx-auto mt-5 max-w-3xl text-base leading-relaxed text-muted-foreground sm:mt-6 sm:text-lg">
-            Our cakes offer classic and unique flavors, made with premium
-            ingredients for an unforgettable taste. We use fresh, high-quality
-            buttercream and fillings in every creation.
-          </p>
+      <section className="py-24 sm:py-32 overflow-hidden bg-transparent">
+        <div className="mx-auto max-w-6xl px-6 lg:px-8 mb-12 sm:mb-16">
+          <div className="text-right">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
+              Flavors & Fillings
+            </h2>
+            <p className="ml-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+              Our cakes offer classic and unique flavors, made with premium
+              ingredients for an unforgettable taste.
+            </p>
+          </div>
         </div>
 
-        {/* Container Layout:
-          - Mobile: 'flex flex-col' allows the sticky items to stack naturally in a column.
-          - Desktop: 'sm:grid' activates the Bento grid.
-          - 'pb-24': Adds space at the bottom so the last card in the stack can be fully viewed.
-        */}
-        <div className="mt-12 flex flex-col gap-4 pb-24 sm:mt-14 sm:grid sm:auto-rows-[200px] sm:grid-cols-4 sm:gap-3 sm:pb-0">
-          {flavors.map((flavor, i) => (
-            <FlavorCard
-              key={flavor.id}
-              flavor={flavor}
-              position={bentoPositions[i]}
-              index={i}
-            />
-          ))}
+        <div className="embla-flavors" ref={emblaRef}>
+          <div className="embla-flavors__container pb-12">
+            {flavors.map((flavor, i) => (
+              <FlavorCard
+                key={flavor.id}
+                flavor={flavor}
+                index={i}
+              />
+            ))}
+            {/* Left-side buffer to allow the last card to bleed off properly */}
+            <div className="w-[10vw] flex-none" />
+          </div>
         </div>
       </section>
     </>
