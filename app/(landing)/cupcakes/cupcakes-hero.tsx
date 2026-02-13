@@ -1,6 +1,6 @@
 // =============================================================================
-// File: src/app/(landing)/cakes/cakes-hero.tsx
-// Description: Hero section for the cakes landing page with occasion cards.
+// File: src/app/(landing)/cupcakes/cupcakes-hero.tsx
+// Description: Hero section for the cupcakes landing page with occasion cards.
 //   Spacing optimized for consistent vertical rhythm across all breakpoints.
 // =============================================================================
 
@@ -13,9 +13,10 @@ import {
   Heart,
   PartyPopper,
   Baby,
-  Gem,
+  Briefcase,
   Cake,
   GlassWater,
+  GraduationCap,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/Button"
@@ -25,7 +26,7 @@ import type { LucideIcon } from "lucide-react"
 // Data
 // ---------------------------------------------------------------------------
 
-interface CakeCategory {
+interface CupcakeCategory {
   id: string
   title: string
   description: string
@@ -33,7 +34,7 @@ interface CakeCategory {
   accent: string
 }
 
-const weddingCard: CakeCategory = {
+const weddingCard: CupcakeCategory = {
   id: "weddings",
   title: "Weddings",
   description:
@@ -42,59 +43,60 @@ const weddingCard: CakeCategory = {
   accent: "text-rose-300",
 }
 
-const cakeCategories: CakeCategory[] = [
+const cupcakeCategories: CupcakeCategory[] = [
   {
-    id: "childrens",
-    title: "Children's Cake",
+    id: "childrens-birthdays",
+    title: "Children's Birthdays",
     description:
-      "Fun, vibrant cakes that capture the excitement of children of all ages.",
+      "Fun, vibrant cakes that capture the excitement of childrens of all ages.",
     icon: PartyPopper,
     accent: "text-amber-300",
   },
   {
-    id: "anniversaries",
-    title: "Anniversaries",
-    description: "Anniversary cakes that reflect your journey together.",
-    icon: Sparkles,
+    id: "corporate-events",
+    title: "Corporate Events",
+    description:
+      "Custom anniversary cake that reflects your journey together.",
+    icon: Briefcase,
     accent: "text-violet-300",
   },
   {
-    id: "norigae",
-    title: "노리개",
+    id: "adult-birthdays",
+    title: "Adult Birthdays",
     description:
-      "Celebrate this Korean tradition with a beautifully crafted cake that blends cultural symbolism with personalized designs for your special milestone.",
-    icon: Gem,
-    accent: "text-emerald-300",
-  },
-  {
-    id: "birthday",
-    title: "Birthday",
-    description:
-      "Cakes designed to match your vision, perfect for celebrating another year of life.",
+      "Celebrate this Korean tradition with a beautifully crafted cake that blends cultural symbolism with personalized designs for your child\u2019s special milestone.",
     icon: Cake,
     accent: "text-sky-300",
   },
   {
-    id: "baby-shower",
-    title: "Baby Shower",
+    id: "baby-showers",
+    title: "Baby Showers",
     description:
-      "Cakes designed to match your décor, perfect for welcoming the new arrival.",
+      "Cakes designed to match your d\u00e9cor, perfect for welcoming the new arrival.",
     icon: Baby,
     accent: "text-pink-300",
+  },
+  {
+    id: "graduations",
+    title: "Graduations",
+    description:
+      "Cake featuring school colors, diplomas, or graduation caps.",
+    icon: GraduationCap,
+    accent: "text-emerald-300",
   },
   {
     id: "engagements",
     title: "Engagements",
     description:
-      "Cakes for any event, from intimate celebrations to grand engagements.",
+      "Custom cakes for any event, from birthdays to engagements.",
     icon: GlassWater,
     accent: "text-yellow-300",
   },
 ]
 
 const trustIndicators = [
-  { label: "5,000+", sublabel: "Cakes Delivered" },
-  { label: "4.9★", sublabel: "Average Rating" },
+  { label: "5,000+", sublabel: "Cupcakes Delivered" },
+  { label: "4.9\u2605", sublabel: "Average Rating" },
   { label: "100%", sublabel: "Made Fresh" },
   { label: "NYC", sublabel: "Based & Shipped" },
 ]
@@ -120,7 +122,7 @@ function CategoryCard({
   className = "",
   index = 0,
 }: {
-  category: CakeCategory
+  category: CupcakeCategory
   className?: string
   index?: number
 }) {
@@ -128,7 +130,7 @@ function CategoryCard({
 
   return (
     <Link
-      href={`/cakes/${category.id}`}
+      href={`/cupcakes/${category.id}`}
       className={`cake-card group/card relative flex overflow-hidden rounded-2xl ${className}`}
       style={{ animationDelay: `${400 + index * 80}ms` }}
     >
@@ -175,7 +177,7 @@ function CardRow({
   cards,
   startIndex,
 }: {
-  cards: CakeCategory[]
+  cards: CupcakeCategory[]
   startIndex: number
 }) {
   return (
@@ -196,8 +198,8 @@ function CardRow({
 // Main Hero
 // ---------------------------------------------------------------------------
 
-export function CakesHero() {
-  const rows = chunkPairs(cakeCategories)
+export function CupcakesHero() {
+  const rows = chunkPairs(cupcakeCategories)
 
   return (
     <>
@@ -229,7 +231,6 @@ export function CakesHero() {
         }
       `}</style>
 
-      {/* ✅ pb-24 sm:pb-32 → pb-16 sm:pb-20 (reduces Hero→Collections gap) */}
       <section className="relative overflow-hidden pb-16 sm:pb-20">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-rose-100/40 via-transparent to-transparent dark:from-rose-950/20" />
 
@@ -252,18 +253,13 @@ export function CakesHero() {
             style={{ animationDelay: "100ms" }}
           >
             <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              Handcrafted Cakes for
-              <br />
-              <span className="text-brand-600 dark:text-brand-400">
-                Every Occasion
-              </span>
+              Cupcakes
             </h1>
 
-            {/* ✅ mt-6 sm:mt-8 → mt-5 sm:mt-6 (tighter heading-to-subtext) */}
             <p className="mx-auto mt-5 max-w-3xl text-lg leading-relaxed text-muted-foreground sm:mt-6">
-              From intimate celebrations to grand weddings, each PEORY cake is a
-              work of art — baked fresh with premium ingredients and decorated
-              with meticulous attention to detail.
+              Our cupcakes offer classic and unique flavors, made with premium
+              ingredients for an unforgettable taste. We use fresh, high-quality
+              buttercream and fillings in every creation.
             </p>
           </div>
 
@@ -283,7 +279,7 @@ export function CakesHero() {
             </Link>
           </div>
 
-          {/* ✅ Trust Indicators — mt-16 sm:mt-20 → mt-12 sm:mt-16 */}
+          {/* Trust Indicators */}
           <div
             className="animate-fade-up mt-12 flex items-center justify-center gap-8 sm:mt-16 sm:gap-12"
             style={{ animationDelay: "300ms" }}
@@ -300,7 +296,7 @@ export function CakesHero() {
             ))}
           </div>
 
-          {/* ✅ Occasion Cards — mt-16 sm:mt-20 → mt-12 sm:mt-16 */}
+          {/* Occasion Cards */}
           <div className="mx-auto mt-12 flex max-w-6xl flex-col gap-4 sm:mt-16">
             <CategoryCard
               category={weddingCard}

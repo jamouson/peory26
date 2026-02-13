@@ -1,6 +1,6 @@
 // =============================================================================
-// File: src/app/(landing)/cakes/cakes-hero.tsx
-// Description: Hero section for the cakes landing page with occasion cards.
+// File: src/app/(landing)/number-cakes/number-cakes-hero.tsx
+// Description: Hero section for the number cakes landing page with occasion cards.
 //   Spacing optimized for consistent vertical rhythm across all breakpoints.
 // =============================================================================
 
@@ -10,12 +10,12 @@ import Link from "next/link"
 import {
   ArrowRight,
   Sparkles,
-  Heart,
-  PartyPopper,
-  Baby,
-  Gem,
   Cake,
+  PartyPopper,
+  Heart,
   GlassWater,
+  Briefcase,
+  Clock,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/Button"
@@ -25,7 +25,7 @@ import type { LucideIcon } from "lucide-react"
 // Data
 // ---------------------------------------------------------------------------
 
-interface CakeCategory {
+interface NumberCakeCategory {
   id: string
   title: string
   description: string
@@ -33,68 +33,69 @@ interface CakeCategory {
   accent: string
 }
 
-const weddingCard: CakeCategory = {
-  id: "weddings",
-  title: "Weddings",
+const birthdayCard: NumberCakeCategory = {
+  id: "birthdays",
+  title: "Birthdays",
   description:
-    "Elegant, multi-tiered wedding cakes tailored to your theme and taste, creating a stunning centerpiece for your big day.",
-  icon: Heart,
+    "Milestones and Birthday celebrations for all ages.",
+  icon: Cake,
   accent: "text-rose-300",
 }
 
-const cakeCategories: CakeCategory[] = [
+const numberCakeCategories: NumberCakeCategory[] = [
   {
-    id: "childrens",
-    title: "Children's Cake",
+    id: "new-years",
+    title: "New Year's Celebrations",
     description:
-      "Fun, vibrant cakes that capture the excitement of children of all ages.",
-    icon: PartyPopper,
+      "Upcoming year's digits.",
+    icon: Sparkles,
     accent: "text-amber-300",
   },
   {
     id: "anniversaries",
     title: "Anniversaries",
-    description: "Anniversary cakes that reflect your journey together.",
-    icon: Sparkles,
+    description:
+      "Anniversaries marked by specific years.",
+    icon: Heart,
     accent: "text-violet-300",
   },
   {
-    id: "norigae",
-    title: "노리개",
+    id: "engagements-weddings",
+    title: "Engagements and Weddings",
     description:
-      "Celebrate this Korean tradition with a beautifully crafted cake that blends cultural symbolism with personalized designs for your special milestone.",
-    icon: Gem,
-    accent: "text-emerald-300",
-  },
-  {
-    id: "birthday",
-    title: "Birthday",
-    description:
-      "Cakes designed to match your vision, perfect for celebrating another year of life.",
-    icon: Cake,
+      "Pre-wedding events or wedding countdowns using special dates.",
+    icon: GlassWater,
     accent: "text-sky-300",
   },
   {
-    id: "baby-shower",
-    title: "Baby Shower",
+    id: "retirement",
+    title: "Retirement",
     description:
-      "Cakes designed to match your décor, perfect for welcoming the new arrival.",
-    icon: Baby,
+      "Highlighting the number of years worked or the retirement year.",
+    icon: Clock,
     accent: "text-pink-300",
   },
   {
-    id: "engagements",
-    title: "Engagements",
+    id: "corporate-events",
+    title: "Corporate Events",
     description:
-      "Cakes for any event, from intimate celebrations to grand engagements.",
-    icon: GlassWater,
+      "Commemorate business milestones or company anniversaries.",
+    icon: Briefcase,
+    accent: "text-emerald-300",
+  },
+  {
+    id: "celebrations",
+    title: "Special Celebrations",
+    description:
+      "Custom number cakes for any milestone worth celebrating.",
+    icon: PartyPopper,
     accent: "text-yellow-300",
   },
 ]
 
 const trustIndicators = [
   { label: "5,000+", sublabel: "Cakes Delivered" },
-  { label: "4.9★", sublabel: "Average Rating" },
+  { label: "4.9\u2605", sublabel: "Average Rating" },
   { label: "100%", sublabel: "Made Fresh" },
   { label: "NYC", sublabel: "Based & Shipped" },
 ]
@@ -120,7 +121,7 @@ function CategoryCard({
   className = "",
   index = 0,
 }: {
-  category: CakeCategory
+  category: NumberCakeCategory
   className?: string
   index?: number
 }) {
@@ -128,7 +129,7 @@ function CategoryCard({
 
   return (
     <Link
-      href={`/cakes/${category.id}`}
+      href={`/number-cakes/${category.id}`}
       className={`cake-card group/card relative flex overflow-hidden rounded-2xl ${className}`}
       style={{ animationDelay: `${400 + index * 80}ms` }}
     >
@@ -175,7 +176,7 @@ function CardRow({
   cards,
   startIndex,
 }: {
-  cards: CakeCategory[]
+  cards: NumberCakeCategory[]
   startIndex: number
 }) {
   return (
@@ -196,8 +197,8 @@ function CardRow({
 // Main Hero
 // ---------------------------------------------------------------------------
 
-export function CakesHero() {
-  const rows = chunkPairs(cakeCategories)
+export function NumberCakesHero() {
+  const rows = chunkPairs(numberCakeCategories)
 
   return (
     <>
@@ -229,7 +230,6 @@ export function CakesHero() {
         }
       `}</style>
 
-      {/* ✅ pb-24 sm:pb-32 → pb-16 sm:pb-20 (reduces Hero→Collections gap) */}
       <section className="relative overflow-hidden pb-16 sm:pb-20">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-rose-100/40 via-transparent to-transparent dark:from-rose-950/20" />
 
@@ -252,18 +252,13 @@ export function CakesHero() {
             style={{ animationDelay: "100ms" }}
           >
             <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              Handcrafted Cakes for
-              <br />
-              <span className="text-brand-600 dark:text-brand-400">
-                Every Occasion
-              </span>
+              Number Cakes
             </h1>
 
-            {/* ✅ mt-6 sm:mt-8 → mt-5 sm:mt-6 (tighter heading-to-subtext) */}
             <p className="mx-auto mt-5 max-w-3xl text-lg leading-relaxed text-muted-foreground sm:mt-6">
-              From intimate celebrations to grand weddings, each PEORY cake is a
-              work of art — baked fresh with premium ingredients and decorated
-              with meticulous attention to detail.
+              Personalized number cakes adorned with buttercream flowers for
+              birthdays and anniversaries. Elegant designs crafted to make your
+              celebrations memorable.
             </p>
           </div>
 
@@ -283,7 +278,7 @@ export function CakesHero() {
             </Link>
           </div>
 
-          {/* ✅ Trust Indicators — mt-16 sm:mt-20 → mt-12 sm:mt-16 */}
+          {/* Trust Indicators */}
           <div
             className="animate-fade-up mt-12 flex items-center justify-center gap-8 sm:mt-16 sm:gap-12"
             style={{ animationDelay: "300ms" }}
@@ -300,10 +295,10 @@ export function CakesHero() {
             ))}
           </div>
 
-          {/* ✅ Occasion Cards — mt-16 sm:mt-20 → mt-12 sm:mt-16 */}
+          {/* Occasion Cards */}
           <div className="mx-auto mt-12 flex max-w-6xl flex-col gap-4 sm:mt-16">
             <CategoryCard
-              category={weddingCard}
+              category={birthdayCard}
               className="h-72 sm:h-96"
               index={0}
             />

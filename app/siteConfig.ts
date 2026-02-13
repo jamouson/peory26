@@ -7,7 +7,7 @@ export const siteConfig = {
     cakes: "/cakes",
     cupcakes: "/cupcakes",
     numberCakes: "/number-cakes",
-    collections: "/cakes#collections",
+    collections: "/collections",
     occasion: "/cakes#occasion",
     pricing: "/pricing",
     pure: "/pure",
