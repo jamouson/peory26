@@ -7,8 +7,8 @@ export default function CodeExampleTabs({
   tab1,
   tab2,
 }: {
-  tab1?: any
-  tab2?: any
+  tab1?: React.ReactNode
+  tab2?: React.ReactNode
 }) {
   return (
     <Tabs.Root
@@ -18,54 +18,59 @@ export default function CodeExampleTabs({
     >
       <Tabs.List
         className="col-span-full flex w-full flex-col gap-8 md:order-2 md:col-span-5"
-        aria-label="Select code"
+        aria-label="Select design"
       >
         <Tabs.Trigger
-          className="group relative flex flex-1 flex-col items-start justify-start rounded-xl p-6 text-left shadow-lg ring-1 ring-gray-200 dark:ring-white/5 dark:data-[state=active]:shadow-brand-900/30"
+          className="group relative flex flex-1 flex-col items-start justify-start rounded-xl p-6 text-left shadow-lg ring-1 ring-gray-200 dark:ring-white/5 dark:data-[state=active]:shadow-brand-900/30 bg-white dark:bg-gray-900"
           value="tab1"
         >
+          {/* UPDATED: Changed fill-gray-950 to fill-white */}
           <div className="absolute -left-[36px] top-1/2 hidden -rotate-90 group-data-[state=active]:flex">
             <Arrow
               width={18}
               height={8}
-              className="fill-gray-950 dark:fill-gray-900"
+              className="fill-white dark:fill-gray-900" 
             />
           </div>
+          
           <div className="flex items-center gap-4">
             <div className="aspect-square w-fit rounded-lg bg-white p-2 text-gray-700 ring-1 ring-black/10 transition-all group-data-[state=active]:text-brand-600 group-data-[state=active]:shadow-md group-data-[state=active]:shadow-brand-500/20 dark:bg-gray-950 dark:text-gray-400 dark:ring-white/10 dark:group-data-[state=active]:text-brand-400 dark:group-data-[state=active]:shadow-brand-600/50">
               <RiShapesLine aria-hidden="true" className="size-5" />
             </div>
             <p className="font-semibold tracking-tight text-gray-700 transition-all group-data-[state=active]:text-brand-600 sm:text-lg dark:text-gray-400 dark:group-data-[state=active]:text-brand-400">
-              Model everything
+              Realistic Buttercream Flowers
             </p>
           </div>
           <p className="mt-4 leading-7 text-gray-600 dark:text-gray-400">
-            Data integrity and query efficiency for diverse data types including
-            geospatial and time-series. Easy to create, effortless to maintain.
+            Our signature bouquets are crafted petal by petal, creating stunning
+            3D floral designs.
           </p>
         </Tabs.Trigger>
+
         <Tabs.Trigger
-          className="group relative flex flex-1 flex-col items-start justify-start rounded-xl p-6 text-left shadow-lg ring-1 ring-gray-200 dark:ring-white/5 dark:data-[state=active]:shadow-brand-900/30"
+          className="group relative flex flex-1 flex-col items-start justify-start rounded-xl p-6 text-left shadow-lg ring-1 ring-gray-200 dark:ring-white/5 dark:data-[state=active]:shadow-brand-900/30 bg-white dark:bg-gray-900"
           value="tab2"
         >
+          {/* UPDATED: Changed fill-gray-950 to fill-white */}
           <div className="absolute -left-[36px] top-1/2 hidden -rotate-90 sm:group-data-[state=active]:flex">
             <Arrow
               width={18}
               height={8}
-              className="fill-gray-950 dark:fill-gray-900"
+              className="fill-white dark:fill-gray-900"
             />
           </div>
+
           <div className="flex items-center gap-4">
             <div className="data-state aspect-square w-fit rounded-lg bg-white p-2 text-gray-700 ring-1 ring-black/10 transition-all group-data-[state=active]:text-brand-600 group-data-[state=active]:shadow-md group-data-[state=active]:shadow-brand-500/20 dark:bg-gray-950 dark:text-gray-400 dark:ring-white/10 dark:group-data-[state=active]:text-brand-400 dark:group-data-[state=active]:shadow-brand-600/50">
               <RiCodeSSlashLine aria-hidden="true" className="size-5" />
             </div>
             <p className="font-semibold tracking-tight text-gray-700 transition-all group-data-[state=active]:text-brand-600 sm:text-lg dark:text-gray-400 dark:group-data-[state=active]:text-brand-400">
-              Query efficiently
+              Personalized Designs
             </p>
           </div>
           <p className="mt-4 leading-7 text-gray-600 dark:text-gray-400">
-            Leverage a developer-native query API to efficiently manage
-            PostgreSQL data. Initialize once, scale infinitely.
+            Our Seoul-based cake designer, Erika Lee, works closely with each
+            couple to bring their dream cake to life.
           </p>
         </Tabs.Trigger>
       </Tabs.List>
