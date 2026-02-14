@@ -1,6 +1,7 @@
 // =============================================================================
 // File: src/app/(landing)/cakes/customer-reviews.tsx
 // Description: Infinite looping carousel centered on screen.
+//              Uses images for logos to ensure accuracy.
 // =============================================================================
 
 "use client"
@@ -34,7 +35,7 @@ const reviews: Review[] = [
 ]
 
 // ---------------------------------------------------------------------------
-// Platform Logos
+// Platform Logos (Using Images)
 // ---------------------------------------------------------------------------
 
 function SourceLogo({ source, className = "" }: { source: string; className?: string }) {
@@ -164,6 +165,7 @@ export function CustomerReviews() {
       {/* Carousel */}
       <div className="relative w-full">
         <div className="w-full cursor-grab active:cursor-grabbing" ref={emblaRef}>
+          {/* No gap or padding on this container — spacing lives on each slide */}
           <div className="flex">
             {reviews.map((review, i) => (
               <div
@@ -176,8 +178,8 @@ export function CustomerReviews() {
           </div>
         </div>
 
-        {/* Navigation Arrows */}
-        <div className="pointer-events-none absolute inset-0 top-1/2 -translate-y-1/2 flex items-center justify-between px-2 sm:px-12">
+        {/* Navigation Arrows — aligned with other carousels */}
+        <div className="pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 flex w-full max-w-[82rem] items-center justify-between px-4 sm:px-6 lg:px-8">
           <button
             onClick={scrollPrev}
             className="pointer-events-auto flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-foreground/[0.08] bg-background/90 backdrop-blur-sm shadow-sm transition-all hover:bg-background hover:scale-105"
