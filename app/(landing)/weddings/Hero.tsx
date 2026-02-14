@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
+import { createPortal } from "react-dom"
 import { RiPlayCircleFill } from "@remixicon/react"
 import { X } from "lucide-react"
 import Link from "next/link"
@@ -15,8 +16,7 @@ export default function Hero() {
 
   const openTheater = useCallback(() => {
     if (!imageRef.current) return
-    const rect = imageRef.current.getBoundingClientRect()
-    setImageRect(rect)
+    setImageRect(imageRef.current.getBoundingClientRect())
     setPhase("morphing")
 
     requestAnimationFrame(() => {
@@ -30,7 +30,6 @@ export default function Hero() {
 
   const closeTheater = useCallback(() => {
     setPhase("morphing")
-
     setTimeout(() => {
       setPhase("idle")
       document.body.style.overflow = ""
@@ -61,39 +60,108 @@ export default function Hero() {
   const getMorphStyle = (): React.CSSProperties => {
     if (!imageRect) return {}
 
+    const base: React.CSSProperties = {
+      position: "fixed",
+      borderRadius: phase === "theater" ? "0.75rem" : "0.5rem",
+      transition: "all 0.6s cubic-bezier(0.32, 0.72, 0, 1)",
+      zIndex: 2147483647,
+    }
+
     if (phase === "morphing") {
       return {
-        position: "fixed",
+        ...base,
         top: imageRect.top,
         left: imageRect.left,
         width: imageRect.width,
         height: imageRect.height,
-        borderRadius: "0.5rem",
-        transition: "all 0.6s cubic-bezier(0.32, 0.72, 0, 1)",
-        zIndex: 60,
       }
     }
 
     if (phase === "theater") {
       const maxWidth = Math.min(window.innerWidth * 0.95, 1400)
       const theaterHeight = maxWidth * 0.5625
-      const top = (window.innerHeight - theaterHeight) / 2
-      const left = (window.innerWidth - maxWidth) / 2
-
       return {
-        position: "fixed",
-        top,
-        left,
+        ...base,
+        top: (window.innerHeight - theaterHeight) / 2,
+        left: (window.innerWidth - maxWidth) / 2,
         width: maxWidth,
         height: theaterHeight,
-        borderRadius: "0.75rem",
-        transition: "all 0.6s cubic-bezier(0.32, 0.72, 0, 1)",
-        zIndex: 60,
       }
     }
 
     return {}
   }
+
+  // Theater overlay — portaled to document.body.
+  // Safe because isOpen can only be true after a click (always client-side).
+  const theaterOverlay = isOpen
+    ? createPortal(
+        <>
+          {/* Backdrop */}
+          <div
+            className={`fixed inset-0 bg-black transition-opacity duration-600 ease-out ${
+              phase === "theater" ? "opacity-95" : "opacity-0"
+            }`}
+            style={{ zIndex: 2147483646 }}
+            onClick={closeTheater}
+          />
+
+          {/* Close button */}
+          <button
+            onClick={closeTheater}
+            className={`fixed right-4 top-4 flex size-10 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-all duration-500 hover:bg-white/20 ${
+              phase === "theater"
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 -translate-y-4"
+            }`}
+            style={{ zIndex: 2147483647 }}
+            aria-label="Close video"
+          >
+            <X className="size-5" />
+          </button>
+
+          {/* Morphing video container */}
+          <div
+            style={getMorphStyle()}
+            className="overflow-hidden shadow-2xl shadow-black/60"
+          >
+            <img
+              src="https://placehold.co/1200x600"
+              alt=""
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${
+                phase === "theater" ? "opacity-0" : "opacity-100"
+              }`}
+            />
+            <iframe
+              className={`absolute inset-0 h-full w-full transition-opacity duration-500 delay-200 ${
+                phase === "theater" ? "opacity-100" : "opacity-0"
+              }`}
+              src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0`}
+              title="PEORY Cakes Video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+
+          {/* ESC hint */}
+          <p
+            className={`fixed bottom-8 left-1/2 -translate-x-1/2 text-sm text-white/40 transition-all duration-500 delay-300 ${
+              phase === "theater"
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-4"
+            }`}
+            style={{ zIndex: 2147483647 }}
+          >
+            Press{" "}
+            <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-xs font-medium text-white/60">
+              ESC
+            </kbd>{" "}
+            to close
+          </p>
+        </>,
+        document.body
+      )
+    : null
 
   return (
     <>
@@ -141,15 +209,7 @@ export default function Hero() {
         {/* Hero Image with play overlay */}
         <div
           className="relative mx-auto ml-3 mt-20 h-fit w-[40rem] max-w-6xl animate-slide-up-fade sm:ml-auto sm:w-full sm:px-2"
-          style={{
-            animationDuration: "1400ms",
-            maskImage:
-              "linear-gradient(to bottom, transparent, black 10%, black 50%, transparent 100%), linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
-            maskComposite: "intersect",
-            WebkitMaskImage:
-              "linear-gradient(to bottom, transparent, black 10%, black 50%, transparent 100%), linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)",
-            WebkitMaskComposite: "destination-in",
-          }}
+          style={{ animationDuration: "1400ms" }}
         >
           <div
             ref={imageRef}
@@ -161,7 +221,6 @@ export default function Hero() {
               alt="Wedding cake showcase"
               className="w-full rounded-lg shadow-2xl"
             />
-            {/* Play button overlay — hidden by default, visible on hover */}
             <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/20 group-hover:opacity-100">
               <div className="flex size-16 scale-90 items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-sm transition-transform duration-300 group-hover:scale-100 sm:size-20">
                 <RiPlayCircleFill className="size-10 text-gray-900 sm:size-12" />
@@ -171,72 +230,7 @@ export default function Hero() {
         </div>
       </section>
 
-      {/* Theater Mode */}
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className={`fixed inset-0 z-50 bg-black transition-opacity duration-600 ease-out ${
-              phase === "theater" ? "opacity-95" : "opacity-0"
-            }`}
-            onClick={closeTheater}
-          />
-
-          {/* Close button */}
-          <button
-            onClick={closeTheater}
-            className={`fixed right-4 top-4 z-[70] flex size-10 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-all duration-500 hover:bg-white/20 ${
-              phase === "theater"
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 -translate-y-4"
-            }`}
-            aria-label="Close video"
-          >
-            <X className="size-5" />
-          </button>
-
-          {/* Morphing video container */}
-          <div
-            style={getMorphStyle()}
-            className="overflow-hidden shadow-2xl shadow-black/60"
-          >
-            {/* Placeholder image that fades out */}
-            <img
-              src="https://placehold.co/1200x600"
-              alt=""
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${
-                phase === "theater" ? "opacity-0" : "opacity-100"
-              }`}
-            />
-
-            {/* YouTube iframe that fades in */}
-            <iframe
-              className={`absolute inset-0 h-full w-full transition-opacity duration-500 delay-200 ${
-                phase === "theater" ? "opacity-100" : "opacity-0"
-              }`}
-              src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0`}
-              title="PEORY Cakes Video"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-
-          {/* ESC hint */}
-          <p
-            className={`fixed bottom-8 left-1/2 z-[70] -translate-x-1/2 text-sm text-white/40 transition-all duration-500 delay-300 ${
-              phase === "theater"
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-4"
-            }`}
-          >
-            Press{" "}
-            <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-xs font-medium text-white/60">
-              ESC
-            </kbd>{" "}
-            to close
-          </p>
-        </>
-      )}
+      {theaterOverlay}
     </>
   )
 }
