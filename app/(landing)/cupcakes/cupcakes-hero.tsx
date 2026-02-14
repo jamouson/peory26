@@ -2,6 +2,8 @@
 // File: src/app/(landing)/cupcakes/cupcakes-hero.tsx
 // Description: Hero section for the cupcakes landing page with occasion cards.
 //   Spacing optimized for consistent vertical rhythm across all breakpoints.
+//   NOTE: @keyframes fade-up and .animate-fade-up live in globals.css.
+//   Only card-specific hover/transition styles remain in the <style> block.
 // =============================================================================
 
 "use client"
@@ -203,15 +205,8 @@ export function CupcakesHero() {
 
   return (
     <>
+      {/* Card-specific styles only — fade-up keyframes live in globals.css */}
       <style>{`
-        @keyframes fade-up {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-up {
-          opacity: 0;
-          animation: fade-up 0.6s ease-out forwards;
-        }
         .cake-card {
           opacity: 0;
           animation: fade-up 0.5s ease-out forwards;

@@ -132,11 +132,12 @@ export function Flavors() {
 
   useEffect(() => {
     if (!emblaApi) return
-    // Embla has initialized and snapped to startIndex — safe to show
     const onInit = () => setReady(true)
     emblaApi.on("init", onInit)
-    // In case init already fired
-    if (emblaApi.internalEngine()) setReady(true)
+    // In case init already fired — defer to avoid synchronous setState in effect
+    if (emblaApi.internalEngine()) {
+      requestAnimationFrame(() => setReady(true))
+    }
     return () => {
       emblaApi.off("init", onInit)
     }

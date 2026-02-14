@@ -1,3 +1,8 @@
+// =============================================================================
+// File: src/app/(landing)/page.tsx
+// Description: Landing page. Entrance animation handled by layout wrapper.
+// =============================================================================
+
 import CodeExample from "@/components/ui/CodeExample"
 import Cta from "@/components/ui/Cta"
 import Features from "@/components/ui/Features"

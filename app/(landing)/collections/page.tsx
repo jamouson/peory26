@@ -4,7 +4,7 @@
 // =============================================================================
 
 import type { Metadata } from "next"
-import { Collections } from "../collections"
+import { Collections } from "./collections"
 import Cta from "@/components/ui/Cta"
 
 export const metadata: Metadata = {
