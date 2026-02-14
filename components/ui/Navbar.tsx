@@ -205,8 +205,8 @@ export function Navigation() {
               <NavigationMenuList>
                 {/* ── Creations (mega menu dropdown) ── */}
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-sm font-medium text-gray-700 hover:bg-gray-100/80 hover:text-gray-900 data-[state=open]:bg-gray-100/80 dark:text-gray-300 dark:hover:bg-gray-800/60 dark:hover:text-gray-100 dark:data-[state=open]:bg-gray-800/60">
-                    Creations
+                <NavigationMenuTrigger className="cursor-pointer bg-transparent text-sm font-medium text-gray-700 hover:bg-gray-100/80 hover:text-gray-900 data-[state=open]:bg-gray-100/80 dark:text-gray-300 dark:hover:bg-gray-800/60 dark:hover:text-gray-100 dark:data-[state=open]:bg-gray-800/60">
+                   Creations
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="grid w-[600px] gap-3 p-4 md:grid-cols-[1fr_0.75fr_0.75fr]">
