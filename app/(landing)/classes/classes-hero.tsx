@@ -61,7 +61,8 @@ export function ClassesHero() {
   }, [isPaused, next])
 
   return (
-    <section className="pt-32 sm:pt-36">
+    // UPDATED: Reduced mobile padding to pt-24 (was pt-32)
+    <section className="pt-24 sm:pt-36">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         
         {/* ── Full-bleed Hero Slider ────────────────────────────────────── */}
@@ -70,10 +71,7 @@ export function ClassesHero() {
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-          {/* UPDATED ASPECT RATIOS: 
-            Mobile: aspect-[4/5] (Taller, portrait feel)
-            Desktop: aspect-[16/9] (Standard cinematic, plenty of height)
-          */}
+          {/* Aspect Ratio: Taller on mobile (4/5) to fix text overlap issues */}
           <div className="relative aspect-[4/5] sm:aspect-[16/10] lg:aspect-[16/9]">
             
             {/* Background Images */}
@@ -90,15 +88,14 @@ export function ClassesHero() {
               />
             </AnimatePresence>
 
-            {/* Gradient Overlay - Stronger at bottom for text readability */}
+            {/* Gradient Overlay - Deep bottom fade for text contrast */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
 
             {/* Content Container */}
             <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-10 lg:p-12">
               <div className="relative z-10 w-full">
                 
-                {/* Text Content */}
-                {/* Fixed height container to prevent layout shifts during transitions */}
+                {/* Text Content Area */}
                 <div className="relative h-[150px] sm:h-[140px] lg:h-[160px] mb-4 sm:mb-8 pointer-events-none">
                     <AnimatePresence mode="wait">
                     <motion.div
@@ -112,7 +109,6 @@ export function ClassesHero() {
                         <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-brand-300 mb-2">
                         PEORY Design Labs
                         </p>
-                        {/* Adjusted text sizing for mobile */}
                         <h1 className="max-w-3xl text-2xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight">
                         {slides[active].headline}
                         </h1>
@@ -149,7 +145,7 @@ export function ClassesHero() {
                     </a>
                   </div>
 
-                  {/* Progress Indicators */}
+                  {/* Progress Indicators (Hidden on mobile to save vertical space) */}
                   <div className="flex gap-2 pb-1 hidden sm:flex">
                     {slides.map((slide, i) => (
                       <button
