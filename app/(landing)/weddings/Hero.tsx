@@ -1,17 +1,10 @@
-// =============================================================================
-// File: src/app/(landing)/hero.tsx
-// Description: Hero section for the main wedding landing page.
-//   Refactored to match the cakes-hero pattern with consistent spacing,
-//   animation, and layout structure.
-//   NOTE: @keyframes fade-up and .animate-fade-up live in globals.css.
-// =============================================================================
-
 "use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import Link from "next/link"
-import { ArrowRight, Sparkles, Play, X } from "lucide-react"
+import { ArrowRight, Sparkles, X } from "lucide-react"
+import { RiPlayCircleFill } from "@remixicon/react" // Kept from 'before' for the image icon
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/Button"
 
@@ -29,7 +22,7 @@ const trustIndicators = [
 ]
 
 // ---------------------------------------------------------------------------
-// Video Theater Hook
+// Video Theater Hook (From 'After' - Cleaner Logic)
 // ---------------------------------------------------------------------------
 
 function useVideoTheater() {
@@ -125,6 +118,7 @@ function TheaterOverlay({
     }
   }
 
+  // PRESERVED: Exact JSX from the 'Before' code for the overlay
   return createPortal(
     <>
       {/* Backdrop */}
@@ -206,11 +200,11 @@ export default function Hero() {
         aria-labelledby="hero-title"
         className="relative overflow-hidden pb-16 sm:pb-20"
       >
-        {/* Background gradient */}
+        {/* Background gradient from 'After' */}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-rose-100/40 via-transparent to-transparent dark:from-rose-950/20" />
 
         <div className="relative mx-auto max-w-6xl px-4 pt-36 sm:px-6 sm:pt-44 lg:px-8">
-          {/* Announcement Badge */}
+          {/* Top Section: 'After' Style */}
           <div className="animate-fade-up flex justify-center">
             <Badge
               variant="outline"
@@ -222,7 +216,6 @@ export default function Hero() {
             </Badge>
           </div>
 
-          {/* Heading */}
           <div
             className="animate-fade-up mt-8 text-center sm:mt-10"
             style={{ animationDelay: "100ms" }}
@@ -245,7 +238,6 @@ export default function Hero() {
             </p>
           </div>
 
-          {/* CTA Buttons */}
           <div
             className="animate-fade-up mt-10 flex items-center justify-center gap-4"
             style={{ animationDelay: "200ms" }}
@@ -261,12 +253,11 @@ export default function Hero() {
               onClick={theater.open}
               className="cursor-pointer gap-2"
             >
-              <Play className="h-4 w-4" />
+              <RiPlayCircleFill className="h-5 w-5" />
               Watch Video
             </Button>
           </div>
 
-          {/* Trust Indicators */}
           <div
             className="animate-fade-up mt-12 flex items-center justify-center gap-8 sm:mt-16 sm:gap-12"
             style={{ animationDelay: "300ms" }}
@@ -282,26 +273,29 @@ export default function Hero() {
               </div>
             ))}
           </div>
+        </div>
 
-          {/* Hero Image with Play Overlay */}
+        {/* PRESERVED: Exact Image Layout from 'Before' 
+          Note: Keeping the specific asymmetric 'ml-3' and 'w-[40rem]' layout 
+          and RiPlayCircleFill icon as requested.
+        */}
+        <div
+          className="relative mx-auto ml-3 mt-20 h-fit w-[40rem] max-w-6xl animate-fade-up sm:ml-auto sm:w-full sm:px-2"
+          style={{ animationDelay: "400ms" }}
+        >
           <div
-            className="animate-fade-up mx-auto mt-12 max-w-6xl sm:mt-16"
-            style={{ animationDelay: "400ms" }}
+            ref={theater.imageRef}
+            className="group relative cursor-pointer overflow-hidden rounded-lg"
+            onClick={theater.open}
           >
-            <div
-              ref={theater.imageRef}
-              className="group relative cursor-pointer overflow-hidden rounded-2xl"
-              onClick={theater.open}
-            >
-              <img
-                src="https://placehold.co/1200x600"
-                alt="Wedding cake showcase"
-                className="w-full rounded-2xl shadow-2xl transition-transform duration-700 ease-out group-hover:scale-105"
-              />
-              <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/20 group-hover:opacity-100">
-                <div className="flex size-16 scale-90 items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-sm transition-transform duration-300 group-hover:scale-100 sm:size-20">
-                  <Play className="size-8 fill-gray-900 text-gray-900 sm:size-10" />
-                </div>
+            <img
+              src="https://placehold.co/1200x600"
+              alt="Wedding cake showcase"
+              className="w-full rounded-lg shadow-2xl"
+            />
+            <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/20 group-hover:opacity-100">
+              <div className="flex size-16 scale-90 items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-sm transition-transform duration-300 group-hover:scale-100 sm:size-20">
+                <RiPlayCircleFill className="size-10 text-gray-900 sm:size-12" />
               </div>
             </div>
           </div>
