@@ -4,7 +4,7 @@
 //   background with the warm marble variant.
 // =============================================================================
 
-import { MarbleBackground } from "@/components/ui/marble-background"
+import { StuccoBackground } from "@/components/ui/backgrounds/stucco-bg"
 
 export default function NumberCakesLayout({
   children,
@@ -13,7 +13,7 @@ export default function NumberCakesLayout({
 }) {
   return (
     <>
-      <MarbleBackground variant="warm" />
+      <StuccoBackground variant="warm" />
       {children}
     </>
   )

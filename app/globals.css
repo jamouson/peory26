@@ -249,6 +249,12 @@ a {
   animation: fade-up 0.6s ease-out forwards;
 }
 
-
-
+/* Background swaps instantly during page transitions.
+   Without this, the old and new backgrounds would crossfade together,
+   creating a muddy double-texture effect. */
+::view-transition-old(page-background),
+::view-transition-new(page-background) {
+  animation: none;
+  mix-blend-mode: normal;
+}
 

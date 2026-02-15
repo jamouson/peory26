@@ -133,7 +133,7 @@ export function Collections() {
           Collections
         </h2>
         <p className="mt-3 max-w-2xl text-lg text-muted-foreground">
-          A closer look at the artistry and creativity of our cakes, year by year.
+          A closer look at the artistry and creativity of our cakes & cupcakes, year by year.
         </p>
       </div>
 

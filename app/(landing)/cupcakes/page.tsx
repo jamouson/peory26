@@ -9,7 +9,7 @@
 
 import type { Metadata } from "next"
 import { CupcakesHero } from "./cupcakes-hero"
-import { CupcakeCollections } from "./cupcake-collections"
+import { Collections } from "../collections"
 import { CakeFlavors } from "../flavors"
 import { CustomerReviews } from "../customer-reviews"
 import Cta from "@/components/ui/Cta"
@@ -24,7 +24,7 @@ export default function CupcakesPage() {
   return (
     <main className="flex flex-col overflow-hidden">
       <CupcakesHero />
-      <CupcakeCollections />
+      <Collections />
       <CakeFlavors />
       <CustomerReviews />
       <Cta />
