@@ -6,10 +6,14 @@
 //   Performance:
 //   - Config resolution is memoized per pathname
 //   - Component lookup is O(1) via registry
-//   - Wrapper uses view-transition-name to exclude backgrounds from page
-//     transitions (prevents crossfade flicker between background types)
 //   - Individual components are React.memo'd and won't re-render unless
 //     the variant prop actually changes
+//   - View transition handling is done via CSS (see globals.css) targeting
+//     the [data-page-bg] attribute on background elements
+//
+//   NOTE: The component is rendered directly (no wrapper div) to avoid
+//   creating a stacking context that would trap the -z-10 backgrounds
+//   and break their positioning behind page content.
 // =============================================================================
 
 "use client"
@@ -54,12 +58,5 @@ export function PageBackground() {
     return null
   }
 
-  return (
-    <div
-      aria-hidden
-      style={{ viewTransitionName: "page-background" }}
-    >
-      <Component variant={variant} />
-    </div>
-  )
+  return <Component variant={variant} />
 }

@@ -1,20 +1,43 @@
+// =============================================================================
+// File: src/app/(landing)/hero.tsx
+// Description: Hero section for the main wedding landing page.
+//   Refactored to match the cakes-hero pattern with consistent spacing,
+//   animation, and layout structure.
+//   NOTE: @keyframes fade-up and .animate-fade-up live in globals.css.
+// =============================================================================
+
 "use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
-import { RiPlayCircleFill } from "@remixicon/react"
-import { X } from "lucide-react"
 import Link from "next/link"
+import { ArrowRight, Sparkles, Play, X } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/Button"
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
 
 const YOUTUBE_VIDEO_ID = "JEtgoMqahjo"
 
-export default function Hero() {
+const trustIndicators = [
+  { label: "5,000+", sublabel: "Cakes Delivered" },
+  { label: "4.9★", sublabel: "Average Rating" },
+  { label: "100%", sublabel: "Made Fresh" },
+  { label: "NYC", sublabel: "Based & Shipped" },
+]
+
+// ---------------------------------------------------------------------------
+// Video Theater Hook
+// ---------------------------------------------------------------------------
+
+function useVideoTheater() {
   const [phase, setPhase] = useState<"idle" | "morphing" | "theater">("idle")
   const imageRef = useRef<HTMLDivElement>(null)
   const [imageRect, setImageRect] = useState<DOMRect | null>(null)
 
-  const openTheater = useCallback(() => {
+  const open = useCallback(() => {
     if (!imageRef.current) return
     setImageRect(imageRef.current.getBoundingClientRect())
     setPhase("morphing")
@@ -28,7 +51,7 @@ export default function Hero() {
     document.body.style.overflow = "hidden"
   }, [])
 
-  const closeTheater = useCallback(() => {
+  const close = useCallback(() => {
     setPhase("morphing")
     setTimeout(() => {
       setPhase("idle")
@@ -38,11 +61,11 @@ export default function Hero() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && phase === "theater") closeTheater()
+      if (e.key === "Escape" && phase === "theater") close()
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [phase, closeTheater])
+  }, [phase, close])
 
   useEffect(() => {
     if (phase !== "idle") return
@@ -55,8 +78,22 @@ export default function Hero() {
     return () => window.removeEventListener("resize", handleResize)
   }, [phase])
 
-  const isOpen = phase !== "idle"
+  return { phase, imageRef, imageRect, open, close, isOpen: phase !== "idle" }
+}
 
+// ---------------------------------------------------------------------------
+// Theater Overlay
+// ---------------------------------------------------------------------------
+
+function TheaterOverlay({
+  phase,
+  imageRect,
+  onClose,
+}: {
+  phase: "morphing" | "theater"
+  imageRect: DOMRect | null
+  onClose: () => void
+}) {
   const getMorphStyle = (): React.CSSProperties => {
     if (!imageRect) return {}
 
@@ -77,160 +114,208 @@ export default function Hero() {
       }
     }
 
-    if (phase === "theater") {
-      const maxWidth = Math.min(window.innerWidth * 0.95, 1400)
-      const theaterHeight = maxWidth * 0.5625
-      return {
-        ...base,
-        top: (window.innerHeight - theaterHeight) / 2,
-        left: (window.innerWidth - maxWidth) / 2,
-        width: maxWidth,
-        height: theaterHeight,
-      }
+    const maxWidth = Math.min(window.innerWidth * 0.95, 1400)
+    const theaterHeight = maxWidth * 0.5625
+    return {
+      ...base,
+      top: (window.innerHeight - theaterHeight) / 2,
+      left: (window.innerWidth - maxWidth) / 2,
+      width: maxWidth,
+      height: theaterHeight,
     }
-
-    return {}
   }
 
-  // Theater overlay — portaled to document.body.
-  // Safe because isOpen can only be true after a click (always client-side).
-  const theaterOverlay = isOpen
-    ? createPortal(
-        <>
-          {/* Backdrop */}
-          <div
-            className={`fixed inset-0 bg-black transition-opacity duration-600 ease-out ${
-              phase === "theater" ? "opacity-95" : "opacity-0"
-            }`}
-            style={{ zIndex: 2147483646 }}
-            onClick={closeTheater}
-          />
+  return createPortal(
+    <>
+      {/* Backdrop */}
+      <div
+        className={`fixed inset-0 bg-black transition-opacity duration-600 ease-out ${
+          phase === "theater" ? "opacity-95" : "opacity-0"
+        }`}
+        style={{ zIndex: 2147483646 }}
+        onClick={onClose}
+      />
 
-          {/* Close button */}
-          <button
-            onClick={closeTheater}
-            className={`fixed right-4 top-4 flex size-10 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-all duration-500 hover:bg-white/20 ${
-              phase === "theater"
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 -translate-y-4"
-            }`}
-            style={{ zIndex: 2147483647 }}
-            aria-label="Close video"
-          >
-            <X className="size-5" />
-          </button>
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className={`fixed right-4 top-4 flex size-10 cursor-pointer items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-all duration-500 hover:bg-white/20 ${
+          phase === "theater"
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 -translate-y-4"
+        }`}
+        style={{ zIndex: 2147483647 }}
+        aria-label="Close video"
+      >
+        <X className="size-5" />
+      </button>
 
-          {/* Morphing video container */}
-          <div
-            style={getMorphStyle()}
-            className="overflow-hidden shadow-2xl shadow-black/60"
-          >
-            <img
-              src="https://placehold.co/1200x600"
-              alt=""
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${
-                phase === "theater" ? "opacity-0" : "opacity-100"
-              }`}
-            />
-            <iframe
-              className={`absolute inset-0 h-full w-full transition-opacity duration-500 delay-200 ${
-                phase === "theater" ? "opacity-100" : "opacity-0"
-              }`}
-              src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0`}
-              title="PEORY Cakes Video"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
+      {/* Morphing video container */}
+      <div
+        style={getMorphStyle()}
+        className="overflow-hidden shadow-2xl shadow-black/60"
+      >
+        <img
+          src="https://placehold.co/1200x600"
+          alt=""
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${
+            phase === "theater" ? "opacity-0" : "opacity-100"
+          }`}
+        />
+        <iframe
+          className={`absolute inset-0 h-full w-full transition-opacity duration-500 delay-200 ${
+            phase === "theater" ? "opacity-100" : "opacity-0"
+          }`}
+          src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?autoplay=1&rel=0`}
+          title="PEORY Cakes Video"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
 
-          {/* ESC hint */}
-          <p
-            className={`fixed bottom-8 left-1/2 -translate-x-1/2 text-sm text-white/40 transition-all duration-500 delay-300 ${
-              phase === "theater"
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-4"
-            }`}
-            style={{ zIndex: 2147483647 }}
-          >
-            Press{" "}
-            <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-xs font-medium text-white/60">
-              ESC
-            </kbd>{" "}
-            to close
-          </p>
-        </>,
-        document.body
-      )
-    : null
+      {/* ESC hint */}
+      <p
+        className={`fixed bottom-8 left-1/2 -translate-x-1/2 text-sm text-white/40 transition-all duration-500 delay-300 ${
+          phase === "theater"
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-4"
+        }`}
+        style={{ zIndex: 2147483647 }}
+      >
+        Press{" "}
+        <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-xs font-medium text-white/60">
+          ESC
+        </kbd>{" "}
+        to close
+      </p>
+    </>,
+    document.body
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Main Hero
+// ---------------------------------------------------------------------------
+
+export default function Hero() {
+  const theater = useVideoTheater()
 
   return (
     <>
       <section
         aria-labelledby="hero-title"
-        className="mt-32 flex flex-col items-center justify-center text-center sm:mt-40"
+        className="relative overflow-hidden pb-16 sm:pb-20"
       >
-        <h1
-          id="hero-title"
-          className="inline-block animate-slide-up-fade bg-gradient-to-br from-gray-900 to-gray-800 bg-clip-text p-2 text-4xl font-bold tracking-tighter text-transparent sm:text-6xl md:text-7xl dark:from-gray-50 dark:to-gray-300"
-          style={{ animationDuration: "700ms" }}
-        >
-          Floral Wedding Cakes in <br /> New York & New Jersey
-        </h1>
-        <p
-          className="mt-6 max-w-lg animate-slide-up-fade text-lg text-gray-700 dark:text-gray-400"
-          style={{ animationDuration: "900ms" }}
-        >
-          Our organic, buttercream floral cakes blend exquisite taste and
-          stunning artistry, creating unforgettable centerpieces that bring your
-          wedding dreams to life.
-        </p>
-        <div
-          className="mt-8 flex w-full animate-slide-up-fade flex-col justify-center gap-3 px-3 sm:flex-row"
-          style={{ animationDuration: "1100ms" }}
-        >
-          <Button className="h-10 cursor-pointer font-semibold">
-            <Link href="#">Inquiry Form</Link>
-          </Button>
-          <Button
-            variant="light"
-            onClick={openTheater}
-            className="group cursor-pointer gap-x-2 bg-transparent font-semibold hover:bg-transparent dark:bg-transparent hover:dark:bg-transparent ring-1 ring-gray-200 sm:ring-0 dark:ring-gray-900"
-          >
-            <span className="mr-1 flex size-6 items-center justify-center rounded-full bg-gray-50 transition-all group-hover:bg-gray-200 dark:bg-gray-800 dark:group-hover:bg-gray-700">
-              <RiPlayCircleFill
-                aria-hidden="true"
-                className="size-5 shrink-0 text-gray-900 dark:text-gray-50"
-              />
-            </span>
-            Watch video
-          </Button>
-        </div>
+        {/* Background gradient */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-rose-100/40 via-transparent to-transparent dark:from-rose-950/20" />
 
-        {/* Hero Image with play overlay */}
-        <div
-          className="relative mx-auto ml-3 mt-20 h-fit w-[40rem] max-w-6xl animate-slide-up-fade sm:ml-auto sm:w-full sm:px-2"
-          style={{ animationDuration: "1400ms" }}
-        >
+        <div className="relative mx-auto max-w-6xl px-4 pt-36 sm:px-6 sm:pt-44 lg:px-8">
+          {/* Announcement Badge */}
+          <div className="animate-fade-up flex justify-center">
+            <Badge
+              variant="outline"
+              className="gap-2 rounded-full border-foreground/10 bg-background/80 px-4 py-1.5 text-sm font-medium backdrop-blur-sm"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-rose-500" />
+              <span>Now accepting orders for 2026</span>
+              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+            </Badge>
+          </div>
+
+          {/* Heading */}
           <div
-            ref={imageRef}
-            className="group relative cursor-pointer overflow-hidden rounded-lg"
-            onClick={openTheater}
+            className="animate-fade-up mt-8 text-center sm:mt-10"
+            style={{ animationDelay: "100ms" }}
           >
-            <img
-              src="https://placehold.co/1200x600"
-              alt="Wedding cake showcase"
-              className="w-full rounded-lg shadow-2xl"
-            />
-            <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/20 group-hover:opacity-100">
-              <div className="flex size-16 scale-90 items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-sm transition-transform duration-300 group-hover:scale-100 sm:size-20">
-                <RiPlayCircleFill className="size-10 text-gray-900 sm:size-12" />
+            <h1
+              id="hero-title"
+              className="mx-auto max-w-3xl text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl"
+            >
+              Floral Wedding Cakes in
+              <br />
+              <span className="text-brand-600 dark:text-brand-400">
+                New York & New Jersey
+              </span>
+            </h1>
+
+            <p className="mx-auto mt-5 max-w-3xl text-lg leading-relaxed text-muted-foreground sm:mt-6">
+              Our organic, buttercream floral cakes blend exquisite taste and
+              stunning artistry, creating unforgettable centerpieces that bring
+              your wedding dreams to life.
+            </p>
+          </div>
+
+          {/* CTA Buttons */}
+          <div
+            className="animate-fade-up mt-10 flex items-center justify-center gap-4"
+            style={{ animationDelay: "200ms" }}
+          >
+            <Link href="/sign-in">
+              <Button variant="primary" className="cursor-pointer gap-2">
+                Inquiry Form
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Button
+              variant="ghost"
+              onClick={theater.open}
+              className="cursor-pointer gap-2"
+            >
+              <Play className="h-4 w-4" />
+              Watch Video
+            </Button>
+          </div>
+
+          {/* Trust Indicators */}
+          <div
+            className="animate-fade-up mt-12 flex items-center justify-center gap-8 sm:mt-16 sm:gap-12"
+            style={{ animationDelay: "300ms" }}
+          >
+            {trustIndicators.map((item) => (
+              <div key={item.label} className="text-center">
+                <div className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
+                  {item.label}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                  {item.sublabel}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Hero Image with Play Overlay */}
+          <div
+            className="animate-fade-up mx-auto mt-12 max-w-6xl sm:mt-16"
+            style={{ animationDelay: "400ms" }}
+          >
+            <div
+              ref={theater.imageRef}
+              className="group relative cursor-pointer overflow-hidden rounded-2xl"
+              onClick={theater.open}
+            >
+              <img
+                src="https://placehold.co/1200x600"
+                alt="Wedding cake showcase"
+                className="w-full rounded-2xl shadow-2xl transition-transform duration-700 ease-out group-hover:scale-105"
+              />
+              <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/20 group-hover:opacity-100">
+                <div className="flex size-16 scale-90 items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-sm transition-transform duration-300 group-hover:scale-100 sm:size-20">
+                  <Play className="size-8 fill-gray-900 text-gray-900 sm:size-10" />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {theaterOverlay}
+      {/* Theater overlay — portaled to document.body */}
+      {theater.isOpen && (
+        <TheaterOverlay
+          phase={theater.phase as "morphing" | "theater"}
+          imageRect={theater.imageRect}
+          onClose={theater.close}
+        />
+      )}
     </>
   )
 }

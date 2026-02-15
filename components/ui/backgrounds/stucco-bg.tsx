@@ -1,8 +1,9 @@
 // =============================================================================
 // File: src/components/ui/backgrounds/stucco-bg.tsx
-// Description: Matte, static texture.
-//   Removes all "movement" (veins/waves) in favor of deep surface grain.
-//   Ideal for forms/checkout where visual distraction must be minimized.
+// Description: "Subtle Matte" texture.
+//   A very quiet, calming background.
+//   Simulates thick, high-quality matte paper or very gently smoothed frosting.
+//   Low contrast, high softness, designed not to distract.
 // =============================================================================
 
 import React, { memo } from "react"
@@ -11,75 +12,89 @@ import { BG_BASE, BG_STYLE } from "./perf"
 
 type StuccoVariant = "cool" | "warm"
 
-// ─── Texture (module-level, created once) ────────────────────────────────────
+// ─── SVG Texture Generator ───────────────────────────────────────────────────
 
-const roughGrain = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`
+// NEW FILTER: "Gentle Matte"
+// 1. baseFrequency='0.008': Large, slow pattern.
+// 2. feColorMatrix values='... 4 -1': Very low contrast. Just enough to see texture exists.
+// 3. feGaussianBlur stdDeviation='30': High blur to make it extremely soft.
+const subtleMatteSVG = (color: string) =>
+  `url("data:image/svg+xml,%3Csvg viewBox='0 0 800 800' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='matte'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.008' numOctaves='3' result='noise' /%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 4 -1' in='noise' result='contrast' /%3E%3CfeGaussianBlur in='contrast' stdDeviation='30' result='blurred' /%3E%3CfeFlood flood-color='${encodeURIComponent(color)}' result='color'/%3E%3CfeComposite operator='in' in='color' in2='blurred'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' fill='transparent' filter='url(%23matte)' opacity='1'/%3E%3C/svg%3E")`
+
+// Pre-compute textures
+const MATTE_TEXTURES = {
+  light: {
+    // Using lighter colors again so it's subtle
+    cool: subtleMatteSVG("#cbd5e1"), // slate-300
+    warm: subtleMatteSVG("#d6d3d1"), // stone-300
+  },
+  dark: {
+    cool: subtleMatteSVG("#334155"), // slate-700
+    warm: subtleMatteSVG("#44403c"), // stone-700
+  },
+}
 
 // ─── Configs ─────────────────────────────────────────────────────────────────
 
 interface ModeConfig {
-  grainBlend: string
-  grainOpacity: string
-  gradient: string
+  bg: string
+  blendMode: string
+  opacity: string
 }
 
 const lightVariants: Record<StuccoVariant, ModeConfig> = {
   cool: {
-    grainBlend: "mix-blend-multiply",
-    grainOpacity: "0.08",
-    gradient: "linear-gradient(to bottom right, #f8fafc, #e2e8f0)",
+    bg: "#f0f9ff",
+    blendMode: "mix-blend-multiply",
+    // Dialed way back down for subtlety
+    opacity: "0.15",
   },
   warm: {
-    grainBlend: "mix-blend-multiply",
-    grainOpacity: "0.1",
-    gradient: "linear-gradient(to bottom right, #fafaf9, #e7e5e4)",
+    bg: "#fdfbf7",
+    blendMode: "mix-blend-multiply",
+    // Dialed way back down for subtlety
+    opacity: "0.18",
   },
 }
 
 const darkVariants: Record<StuccoVariant, ModeConfig> = {
   cool: {
-    grainBlend: "mix-blend-overlay",
-    grainOpacity: "0.15",
-    gradient: "linear-gradient(to bottom right, #0f172a, #020617)",
+    bg: "#020617",
+    blendMode: "mix-blend-screen",
+    opacity: "0.1",
   },
   warm: {
-    grainBlend: "mix-blend-overlay",
-    grainOpacity: "0.12",
-    gradient: "linear-gradient(to bottom right, #1c1917, #0c0a09)",
+    bg: "#0c0a09",
+    blendMode: "mix-blend-screen",
+    opacity: "0.08",
   },
 }
 
-// ─── Stucco Layer ────────────────────────────────────────────────────────────
+// ─── Stucco (Subtle Matte) Layer ─────────────────────────────────────────────
 
 function StuccoLayer({
   config,
+  texture,
   className,
 }: {
   config: ModeConfig
+  texture: string
   className?: string
 }) {
   return (
     <div
       className={`${BG_BASE} ${className ?? ""}`}
-      style={{ ...BG_STYLE, background: config.gradient }}
+      style={{ ...BG_STYLE, backgroundColor: config.bg }}
     >
-      {/* LAYER 1: Deep Grain (Base Texture) */}
       <div
-        className={`absolute inset-0 ${config.grainBlend}`}
+        className={`absolute inset-0 ${config.blendMode}`}
         style={{
-          backgroundImage: roughGrain,
-          backgroundSize: "180px",
-          opacity: config.grainOpacity,
-        }}
-      />
-      {/* LAYER 2: Fine Grain (Cross-hatch Detail) */}
-      <div
-        className={`absolute inset-0 ${config.grainBlend}`}
-        style={{
-          backgroundImage: roughGrain,
-          backgroundSize: "60px",
-          opacity: Number(config.grainOpacity) * 0.5,
-          transform: "rotate(90deg)",
+          backgroundImage: texture,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          opacity: config.opacity,
+          // Slight scale to ensure edges are clean
+          transform: "scale(1.05)",
         }}
       />
     </div>
@@ -97,8 +112,16 @@ export const StuccoBackground = memo(function StuccoBackground({
 
   return (
     <>
-      <StuccoLayer config={lightVariants[key]} className="dark:hidden" />
-      <StuccoLayer config={darkVariants[key]} className="hidden dark:block" />
+      <StuccoLayer
+        config={lightVariants[key]}
+        texture={MATTE_TEXTURES.light[key]}
+        className="dark:hidden"
+      />
+      <StuccoLayer
+        config={darkVariants[key]}
+        texture={MATTE_TEXTURES.dark[key]}
+        className="hidden dark:block"
+      />
     </>
   )
 })

@@ -36,6 +36,23 @@ export const siteConfig = {
    * `type` must match a key registered in backgrounds/registry.ts
    * `variant` is passed to the component — valid values depend on the type.
    */
+
+/**
+   * Available background options:
+   *
+   * { type: "marble",   variant: "cool" }  — Slate veins, cool-toned stone
+   * { type: "marble",   variant: "warm" }  — Stone veins, warm-toned cream
+   * { type: "marble",   variant: "lux"  }  — White veins on dark background
+   * { type: "wave",     variant: "cool" }  — Sharp directional veins, slate
+   * { type: "wave",     variant: "warm" }  — Sharp directional veins, stone
+   * { type: "silk",     variant: "cool" }  — Soft blurred folds, slate
+   * { type: "silk",     variant: "warm" }  — Soft blurred folds, cream
+   * { type: "stucco",   variant: "cool" }  — Matte grain only, clean slate
+   * { type: "stucco",   variant: "warm" }  — Matte grain only, clean cream
+   * { type: "terrazzo",  variant: "cool" }  — Fragmented chips, slate
+   * { type: "terrazzo",  variant: "warm" }  — Fragmented chips, stone
+   */
+
   backgrounds: {
     "/":             { type: "wave",    variant: "cool" },
     "/cakes":        { type: "marble",  variant: "warm" },
@@ -43,10 +60,10 @@ export const siteConfig = {
     "/number-cakes": { type: "marble",  variant: "warm" },
     "/collections":  { type: "wave",    variant: "cool" },
     "/pure":         { type: "marble",  variant: "lux"  },
-    "/weddings":     { type: "silk",    variant: "warm" },
+    "/weddings":     { type: "stucco",    variant: "lux" },
     "/classes":      { type: "wave",    variant: "cool" },
     "/pricing":      { type: "stucco",  variant: "cool" },
-    "/faq":          { type: "silk",    variant: "cool" },
+    "/faq":          { type: "wave",    variant: "lux" },
     "/how-to-order": { type: "stucco",  variant: "warm" },
     "/about":        { type: "marble",  variant: "warm" },
     "/terms":        { type: "stucco",  variant: "cool" },
