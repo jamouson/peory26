@@ -61,9 +61,8 @@ export function ClassesHero() {
   }, [isPaused, next])
 
   return (
-    // UPDATED: Increased padding slightly to pt-32 sm:pt-36
     <section className="pt-32 sm:pt-36">
-      <div className="mx-auto max-w-6xl px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         
         {/* ── Full-bleed Hero Slider ────────────────────────────────────── */}
         <div
@@ -71,8 +70,11 @@ export function ClassesHero() {
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-          {/* Aspect Ratio Container */}
-          <div className="relative aspect-[16/12] sm:aspect-[16/8] md:aspect-[16/7]">
+          {/* UPDATED ASPECT RATIOS: 
+            Mobile: aspect-[4/5] (Taller, portrait feel)
+            Desktop: aspect-[16/9] (Standard cinematic, plenty of height)
+          */}
+          <div className="relative aspect-[4/5] sm:aspect-[16/10] lg:aspect-[16/9]">
             
             {/* Background Images */}
             <AnimatePresence initial={false}>
@@ -88,15 +90,16 @@ export function ClassesHero() {
               />
             </AnimatePresence>
 
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10 pointer-events-none" />
+            {/* Gradient Overlay - Stronger at bottom for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
 
             {/* Content Container */}
-            <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-10 lg:p-12">
+            <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-10 lg:p-12">
               <div className="relative z-10 w-full">
                 
                 {/* Text Content */}
-                <div className="relative h-[160px] sm:h-[140px] lg:h-[120px] mb-6 sm:mb-8 pointer-events-none">
+                {/* Fixed height container to prevent layout shifts during transitions */}
+                <div className="relative h-[150px] sm:h-[140px] lg:h-[160px] mb-4 sm:mb-8 pointer-events-none">
                     <AnimatePresence mode="wait">
                     <motion.div
                         key={slides[active].id}
@@ -106,13 +109,14 @@ export function ClassesHero() {
                         transition={{ duration: 0.4, ease: "easeOut" }}
                         className="absolute bottom-0 left-0 w-full"
                     >
-                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-300 sm:text-sm mb-2">
+                        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] text-brand-300 mb-2">
                         PEORY Design Labs
                         </p>
-                        <h1 className="max-w-3xl text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                        {/* Adjusted text sizing for mobile */}
+                        <h1 className="max-w-3xl text-2xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight">
                         {slides[active].headline}
                         </h1>
-                        <p className="mt-2 max-w-xl text-sm text-white/80 leading-relaxed sm:text-base">
+                        <p className="mt-2 max-w-xl text-sm text-white/80 leading-snug sm:leading-relaxed sm:text-base line-clamp-2 sm:line-clamp-none">
                         {slides[active].subheadline}
                         </p>
                     </motion.div>
@@ -123,22 +127,22 @@ export function ClassesHero() {
                 <div className="relative z-20 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
                   
                   {/* CTA Buttons */}
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
                     <a
                       href="https://docs.google.com/forms/d/e/1FAIpQLScM232094RDD22T-zipPpq7C7gImSVIA1zRkoVM-ZN107Zclw/viewform"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="cursor-pointer"
+                      className="cursor-pointer flex-1 sm:flex-none"
                     >
-                      <Button variant="primary" className="gap-2 cursor-pointer">
+                      <Button variant="primary" className="gap-2 cursor-pointer w-full sm:w-auto justify-center">
                         Inquire Now
                         <ArrowRight className="h-4 w-4" />
                       </Button>
                     </a>
-                    <a href="#course-details" className="cursor-pointer">
+                    <a href="#course-details" className="cursor-pointer flex-1 sm:flex-none">
                       <Button
                         variant="ghost"
-                        className="text-white/90 hover:bg-white/10 hover:text-white cursor-pointer"
+                        className="text-white/90 hover:bg-white/10 hover:text-white cursor-pointer w-full sm:w-auto justify-center"
                       >
                         Learn More
                       </Button>
@@ -146,7 +150,7 @@ export function ClassesHero() {
                   </div>
 
                   {/* Progress Indicators */}
-                  <div className="flex gap-2 sm:gap-3 pb-1">
+                  <div className="flex gap-2 pb-1 hidden sm:flex">
                     {slides.map((slide, i) => (
                       <button
                         key={slide.id}
